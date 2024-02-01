@@ -20,7 +20,7 @@ def readTXT(path: str):
 	for i in fich_str:
 		elem_str = i.replace("\n", "")
 		x.append(float(elem_str))
-	return x
+	return np.array(x)
 
 def simpson(f: callable, a: float, b: float, N: int):
 	h = (b-a)/N
@@ -35,6 +35,12 @@ def simpson(f: callable, a: float, b: float, N: int):
 def x2(x):
 	return x**2
 
+
+def pi_lambda(alpha: int, beta: float):
+	lamb = np.linspace(0,200,201)
+	return 1/gamma(alpha)*lamb**(alpha-1)*np.exp(-beta*lamb)*beta**(alpha)
+
+
 if __name__ == "__main__":
 	path = os.path.abspath("")
 	files_name = listNameOfFiles(path)
@@ -44,8 +50,9 @@ if __name__ == "__main__":
 	time_2 = readTXT(path+"/"+files_name[2])
 
 	testSimpson = simpson(x2,0,3,10000)
-	testRomberg = romberg(x2,0,3)
+	testRomberg = romberg(x2,0,3) # Il va sûrement falloir faire la notre pour contrôler N (on peut peut-être s'en sortir avec la fonction 'romb' de scipy)
+	testpi_lambda = pi_lambda(2, 0.25)
 
 	print(testSimpson)
 	print(testRomberg)
-
+	print(testpi_lambda)
