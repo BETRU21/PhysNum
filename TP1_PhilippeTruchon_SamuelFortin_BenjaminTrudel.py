@@ -1,5 +1,6 @@
 from scipy.integrate import romberg
 from scipy.special import gamma
+from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import numpy as np
 import fnmatch
@@ -35,10 +36,10 @@ def simpson(f: callable, a: float, b: float, N: int):
 def x2(x):
 	return x**2
 
-
-def pi_lambda(alpha: int, beta: float):
-	lamb = np.linspace(0,200,201)
+def pi_lambda(lamb: float, alpha: int, beta: float):
 	return 1/gamma(alpha)*lamb**(alpha-1)*np.exp(-beta*lamb)*beta**(alpha)
+
+
 
 
 if __name__ == "__main__":
@@ -51,8 +52,23 @@ if __name__ == "__main__":
 
 	testSimpson = simpson(x2,0,3,10000)
 	testRomberg = romberg(x2,0,3) # Il va sûrement falloir faire la notre pour contrôler N (on peut peut-être s'en sortir avec la fonction 'romb' de scipy)
-	testpi_lambda = pi_lambda(2, 0.25)
+	
 
 	print(testSimpson)
 	print(testRomberg)
-	print(testpi_lambda)
+	
+
+	# Some testing
+	data = time_2
+	temp = np.sort(np.ediff1d(data))
+	la = 1/np.mean(temp)
+	print(la)
+	x = np.linspace(0,1,1000)
+	
+	y = la*np.exp(-la*x)
+
+	
+	plt.plot(x,y, 'k-')
+	plt.show()
+
+
