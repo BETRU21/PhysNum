@@ -46,8 +46,7 @@ def product(Lambda):
 	path = os.path.abspath("")
 	files_name = listNameOfFiles(path)
 	time_0 = readTXT(path+"/"+files_name[0])
-	data = time_0
-	x = np.sort(np.ediff1d(data))
+	x = np.sort(np.ediff1d(time_0))
 	return pi_lambda(Lambda, 2, 0.25)*np.prod(poisson(x, Lambda))
 
 def post(Lambda):
@@ -71,10 +70,14 @@ if __name__ == "__main__":
 		res.append((product(i)))
 
 	y = simpson(product,0,200,int(1e3))	
-	print(y)
+	print(f'f(x) = {y}')
 	lc = simpson(post,0,200,int(1e3))/y
 	
-	print(lc) # lambda chapeau
+
+	x = np.sort(np.ediff1d(time_0)) # Pour voir lambda
+	print(f'Lambda {1/np.mean(x)}') #Lambda
+
+	print(f'Lambda chapeau = {lc}') # lambda chapeau
 
 	plt.plot(L, res/y, 'k')
 	
