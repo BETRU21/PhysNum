@@ -59,8 +59,9 @@ if __name__ == "__main__":
 	
 
 	# Some testing
-	data = time_2
+	data = time_0
 	temp = np.sort(np.ediff1d(data))
+	print(temp)
 	la = 1/np.mean(temp)
 	print(la)
 	x = np.linspace(0,1,1000)
