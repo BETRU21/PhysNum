@@ -36,10 +36,14 @@ def simpson(f: callable, a: float, b: float, N: int):
 def x2(x):
 	return x**2
 
-def pi_lambda(lamb: float, alpha: int, beta: float):
-	return 1/gamma(alpha)*lamb**(alpha-1)*np.exp(-beta*lamb)*beta**(alpha)
+def pi_lambda(Lambda: float, alpha: int, beta: float):
+	return 1/gamma(alpha)*Lambda**(alpha-1)*np.exp(-beta*Lambda)*beta**(alpha)
 
+def poisson(x, Lambda):
+	return Lambda*np.exp(-Lambda*x)
 
+def product(x, Lambda):
+	return pi_lambda(Lambda, 2, 0.25)*np.prod(poisson(x, Lambda))
 
 
 if __name__ == "__main__":
@@ -53,23 +57,20 @@ if __name__ == "__main__":
 	testSimpson = simpson(x2,0,3,10000)
 	testRomberg = romberg(x2,0,3) # Il va sûrement falloir faire la notre pour contrôler N (on peut peut-être s'en sortir avec la fonction 'romb' de scipy)
 	
-
-	print(testSimpson)
-	print(testRomberg)
-	
-
-	# Some testing
 	data = time_0
-	temp = np.sort(np.ediff1d(data))
-	print(temp)
-	la = 1/np.mean(temp)
-	print(la)
-	x = np.linspace(0,1,1000)
+	x = np.sort(np.ediff1d(data))
 	
-	y = la*np.exp(-la*x)
+	res = product(x, 9)
+	res2 = romberg(product,0,200)
+	
+	"""plt.plot(x, res)
+	plt.show()"""
+
+	print(res)
+	# Some testing
+	
+
 
 	
-	plt.plot(x,y, 'k-')
-	plt.show()
 
 
