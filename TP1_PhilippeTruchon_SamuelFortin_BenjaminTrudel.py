@@ -42,8 +42,16 @@ def pi_lambda(Lambda: float, alpha: int, beta: float):
 def poisson(x, Lambda):
 	return Lambda*np.exp(-Lambda*x)
 
-def product(x, Lambda):
+def product(Lambda):
+	path = os.path.abspath("")
+	files_name = listNameOfFiles(path)
+	time_0 = readTXT(path+"/"+files_name[0])
+	data = time_0
+	x = np.sort(np.ediff1d(data))
 	return pi_lambda(Lambda, 2, 0.25)*np.prod(poisson(x, Lambda))
+
+def post(Lambda):
+	return Lambda*product(Lambda)
 
 
 if __name__ == "__main__":
@@ -57,17 +65,22 @@ if __name__ == "__main__":
 	testSimpson = simpson(x2,0,3,10000)
 	testRomberg = romberg(x2,0,3) # Il va sûrement falloir faire la notre pour contrôler N (on peut peut-être s'en sortir avec la fonction 'romb' de scipy)
 	
-	data = time_0
-	x = np.sort(np.ediff1d(data))
-	
-	res = product(x, 9)
-	res2 = romberg(product,0,200)
-	
-	"""plt.plot(x, res)
-	plt.show()"""
+	L = np.linspace(0,200,200)
+	res = []
+	for i in L:
+		res.append((product(i)))
 
-	print(res)
-	# Some testing
+	y = simpson(product,0,200,int(1e3))	
+	print(y)
+	lc = simpson(post,0,200,int(1e3))/y
+	
+	print(lc) # lambda chapeau
+
+	plt.plot(L, res/y, 'k')
+	
+	plt.show()
+
+
 	
 
 
