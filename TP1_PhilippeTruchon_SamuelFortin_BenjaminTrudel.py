@@ -60,9 +60,10 @@ if __name__ == "__main__":
 		y = simpson(product_partial,0,200,int(1e3))	
 		#yr = romberg(product_partial,0,200, show=True, tol=1e-300)
 		test = romberg_mod(product_partial,0,200, show=True, tol=1e-300, divmax=20)
-		print(test[3])
-		#print(yr)
-		print(f'f(x)_{nb} = {y}')
+		
+		print(f'f(x)_{nb} = {test[3]} (Romberg)')
+
+		print(f'f(x)_{nb} = {y} (Simpson)')
 		lc = simpson(post_partial,0,200,int(1e3))/y
 
 		x = np.sort(np.ediff1d(data_time)) # Pour voir lambda
