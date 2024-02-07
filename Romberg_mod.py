@@ -210,8 +210,10 @@ def romberg_mod(function, a, b, args=(), tol=1.48e-8, rtol=1.48e-8, show=False,
         if show:
             resmat.append(row)
         err = abs(result - lastresult)
-        if err < tol or err < rtol * abs(result):
-            break
+        if i > 4:
+            pass
+            if err < tol or err < rtol * abs(result):
+                break
         last_row = row
     else:
         warnings.warn(
