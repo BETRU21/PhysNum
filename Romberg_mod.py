@@ -1,15 +1,9 @@
-from __future__ import annotations
-
 import numpy as np
-
 import warnings
-
 
 
 class AccuracyWarning(Warning):
     pass
-
-
 
 
 def vectorize1(func, args=(), vec_func=False):
@@ -55,8 +49,6 @@ def vectorize1(func, args=(), vec_func=False):
                 output[i] = func(x[i], *args)
             return output
     return vfunc
-
-
 
 # Romberg quadratures for numeric integration.
 #
@@ -230,5 +222,3 @@ def romberg_mod(function, a, b, args=(), tol=1.48e-8, rtol=1.48e-8, show=False,
         return (vfunc, interval, resmat, result)
     else:
         return result
-
-
