@@ -1,4 +1,5 @@
 from scipy.integrate import romberg
+from Romberg_mod import romberg_mod
 from scipy.special import gamma
 import matplotlib.pyplot as plt
 import numpy as np
@@ -57,12 +58,14 @@ if __name__ == "__main__":
 		post_partial = functools.partial(post, data=data_time)
 
 		y = simpson(product_partial,0,200,int(1e3))	
-		yr = romberg(product_partial,0,200, show=True, tol=1e-16)
-		print(yr)
+		#yr = romberg(product_partial,0,200, show=True, tol=1e-32)
+		test = romberg_mod(product_partial,0,200, show=True, tol=1e-16, divmax=20)
+		print(test[3])
+		#print(yr)
 		print(f'f(x)_{nb} = {y}')
 		lc = simpson(post_partial,0,200,int(1e3))/y
 
 		x = np.sort(np.ediff1d(data_time)) # Pour voir lambda
 		print(f'Lambda_{nb} {1/np.mean(x)}') #Lambda
-		print(f'Lambda chapeau {nb} = {lc}') # lambda chapeau
-		print("")
+		print(f'Lambda chapeau {nb} = {lc} \n') # lambda chapeau
+
