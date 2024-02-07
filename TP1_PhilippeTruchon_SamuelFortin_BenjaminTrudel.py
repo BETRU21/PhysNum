@@ -56,12 +56,9 @@ if __name__ == "__main__":
 		product_partial = functools.partial(product, data=data_time)
 		post_partial = functools.partial(post, data=data_time)
 
-		L = np.linspace(0,200,200)
-		res = []
-		for i in L:
-			res.append((product_partial(i)))
-
 		y = simpson(product_partial,0,200,int(1e3))	
+		yr = romberg(product_partial,0,200, show=True, tol=1e-16)
+		print(yr)
 		print(f'f(x)_{nb} = {y}')
 		lc = simpson(post_partial,0,200,int(1e3))/y
 
