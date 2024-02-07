@@ -42,16 +42,98 @@ def pi_lambda(Lambda: float, alpha: int, beta: float):
 def poisson(x, Lambda):
 	return Lambda*np.exp(-Lambda*x)
 
-def product(Lambda):
+def product0(Lambda):
 	path = os.path.abspath("")
 	files_name = listNameOfFiles(path)
 	time_0 = readTXT(path+"/"+files_name[0])
 	x = np.sort(np.ediff1d(time_0))
 	return pi_lambda(Lambda, 2, 0.25)*np.prod(poisson(x, Lambda))
 
-def post(Lambda):
-	return Lambda*product(Lambda)
+def post0(Lambda):
+	return Lambda*product0(Lambda)
 
+def product1(Lambda):
+	path = os.path.abspath("")
+	files_name = listNameOfFiles(path)
+	time_1 = readTXT(path+"/"+files_name[1])
+	x = np.sort(np.ediff1d(time_1))
+	return pi_lambda(Lambda, 2, 0.25)*np.prod(poisson(x, Lambda))
+
+def post1(Lambda):
+	return Lambda*product1(Lambda)
+
+def product2(Lambda):
+	path = os.path.abspath("")
+	files_name = listNameOfFiles(path)
+	time_2 = readTXT(path+"/"+files_name[2])
+	x = np.sort(np.ediff1d(time_2))
+	return pi_lambda(Lambda, 2, 0.25)*np.prod(poisson(x, Lambda))
+
+def post2(Lambda):
+	return Lambda*product2(Lambda)
+
+def Compute_time_0(show_plot=True):
+	L = np.linspace(0,200,200)
+	res = []
+	for i in L:
+		res.append((product0(i)))
+
+	y = simpson(product0,0,200,int(1e3))	
+	print(f'f(x)_0 = {y}')
+	lc = simpson(post0,0,200,int(1e3))/y
+	
+
+	x = np.sort(np.ediff1d(time_0)) # Pour voir lambda
+	print(f'Lambda_0 {1/np.mean(x)}') #Lambda
+
+	print(f'Lambda chapeau 0 = {lc}') # lambda chapeau
+	print("")
+
+	if show_plot:
+		plt.plot(L, res/y, 'k')
+		plt.show()
+
+def Compute_time_1(show_plot=True):
+	L = np.linspace(0,200,200)
+	res = []
+	for i in L:
+		res.append((product1(i)))
+
+	y = simpson(product1,0,200,int(1e3))	
+	print(f'f(x)_1 = {y}')
+	lc = simpson(post1,0,200,int(1e3))/y
+	
+
+	x = np.sort(np.ediff1d(time_1)) # Pour voir lambda
+	print(f'Lambda_1 {1/np.mean(x)}') #Lambda
+
+	print(f'Lambda chapeau 1 = {lc}') # lambda chapeau
+	print("")
+
+	if show_plot:
+		plt.plot(L, res/y, 'k')
+		plt.show()
+
+def Compute_time_2(show_plot=True):
+	L = np.linspace(0,200,200)
+	res = []
+	for i in L:
+		res.append((product2(i)))
+
+	y = simpson(product2,0,200,int(1e3))	
+	print(f'f(x)_2 = {y}')
+	lc = simpson(post2,0,200,int(1e3))/y
+	
+
+	x = np.sort(np.ediff1d(time_2)) # Pour voir lambda
+	print(f'Lambda_2 {1/np.mean(x)}') #Lambda
+
+	print(f'Lambda chapeau 2 = {lc}') # lambda chapeau
+	print("")
+
+	if show_plot:
+		plt.plot(L, res/y, 'k')
+		plt.show()
 
 if __name__ == "__main__":
 	path = os.path.abspath("")
@@ -64,24 +146,10 @@ if __name__ == "__main__":
 	testSimpson = simpson(x2,0,3,10000)
 	testRomberg = romberg(x2,0,3) # Il va sûrement falloir faire la notre pour contrôler N (on peut peut-être s'en sortir avec la fonction 'romb' de scipy)
 	
-	L = np.linspace(0,200,200)
-	res = []
-	for i in L:
-		res.append((product(i)))
+	Compute_time_0(False)
+	Compute_time_1(False)
+	Compute_time_2(False)
 
-	y = simpson(product,0,200,int(1e3))	
-	print(f'f(x) = {y}')
-	lc = simpson(post,0,200,int(1e3))/y
-	
-
-	x = np.sort(np.ediff1d(time_0)) # Pour voir lambda
-	print(f'Lambda {1/np.mean(x)}') #Lambda
-
-	print(f'Lambda chapeau = {lc}') # lambda chapeau
-
-	plt.plot(L, res/y, 'k')
-	
-	plt.show()
 
 
 	
