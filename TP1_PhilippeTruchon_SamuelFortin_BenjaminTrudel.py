@@ -47,6 +47,21 @@ def product(Lambda, data):
 def post(Lambda, data):
 	return Lambda*product(Lambda, data)
 
+def show_rom(data):
+			interval = test[1]
+			resmat = test[2]
+			print('from', interval)
+			print('')
+			print('%6s %9s %9s' % ('Steps', 'StepSize', 'Results'))
+			for i in range(len(resmat)):
+				print('%6d %9f' % (2**i, (interval[1]-interval[0])/(2.**i)), end=' ')
+				for j in range(i+1):
+					print('%.16E' % (resmat[i][j]), end=' ')
+				print('')
+			print('')
+			print('The final result is', resmat[i][j], end=' ')
+			print('after', 2**(len(resmat)-1)+1, 'function evaluations.')
+
 if __name__ == "__main__":
 	path = os.path.abspath("")
 	files_name = listNameOfFiles(path)
@@ -60,6 +75,7 @@ if __name__ == "__main__":
 		y = simpson(product_partial,0,200,int(1e3))	
 		#yr = romberg(product_partial,0,200, show=True, tol=1e-300)
 		test = romberg_mod(product_partial,0,200, show=True, tol=1e-300, divmax=20)
+		show_rom(test)
 		
 		print(f'f(x)_{nb} = {test[3]} (Romberg)')
 
@@ -70,4 +86,4 @@ if __name__ == "__main__":
 		print(f'Lambda_{nb} {1/np.mean(x)}') #Lambda
 		print(f'Lambda chapeau {nb} = {lc} \n') # lambda 
 		
-
+		
