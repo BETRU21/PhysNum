@@ -47,7 +47,7 @@ def product(Lambda, data):
 def post(Lambda, data):
 	return Lambda*product(Lambda, data)
 
-def show_rom(data):
+def show_rom(test):
 			interval = test[1]
 			resmat = test[2]
 			print('from', interval)
