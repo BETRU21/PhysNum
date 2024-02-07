@@ -58,8 +58,8 @@ if __name__ == "__main__":
 		post_partial = functools.partial(post, data=data_time)
 
 		y = simpson(product_partial,0,200,int(1e3))	
-		#yr = romberg(product_partial,0,200, show=True, tol=1e-32)
-		test = romberg_mod(product_partial,0,200, show=True, tol=1e-16, divmax=20)
+		#yr = romberg(product_partial,0,200, show=True, tol=1e-300)
+		test = romberg_mod(product_partial,0,200, show=True, tol=1e-300, divmax=20)
 		print(test[3])
 		#print(yr)
 		print(f'f(x)_{nb} = {y}')
@@ -67,5 +67,6 @@ if __name__ == "__main__":
 
 		x = np.sort(np.ediff1d(data_time)) # Pour voir lambda
 		print(f'Lambda_{nb} {1/np.mean(x)}') #Lambda
-		print(f'Lambda chapeau {nb} = {lc} \n') # lambda chapeau
+		print(f'Lambda chapeau {nb} = {lc} \n') # lambda 
+		
 
