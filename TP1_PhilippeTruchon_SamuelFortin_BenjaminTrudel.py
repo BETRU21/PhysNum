@@ -132,13 +132,15 @@ if __name__ == "__main__":
 		product_partial = functools.partial(product, data=data_time)
 		post_partial = functools.partial(post, data=data_time)
 
-		y = simpson(product_partial,0,200,int(531))	
+		fx = simpson(product_partial,0,200,int(531))	
 		
 		res = nested_simpson(product_partial,0,200,int(3))	
+		#fx = res[0][-1]
 		show_simp(res)
-		print('Résultat = %.16E' % (y))
+		print('Résultat = %.16E' % (fx))
 
 		test = romberg_mod(product_partial,0,200, show=True, tol=1e-16, rtol=1e-16, divmax=20)
+		#fx = test[2][-1][-1]
 		show_rom(test)
 		
 		print(f'f(x)_{nb} = {test[3]} (Romberg)')
@@ -151,12 +153,15 @@ if __name__ == "__main__":
 		print(f'Lambda chapeau {nb} = {lc} \n') # lambda """
 
 		# Pour graph
-		
+
 		L = np.linspace(0,200,200)
 		res = []
 		for i in L:
 			res.append((product_partial(i)))
+
+		print(f'Aire sous la courbe des distributions obtenues: {np.sum(res/y)}')
 		
-		plt.plot(L, res/y, 'k')
+		plt.plot(L, res/fx, 'k')
+		
 		plt.show()
 		
