@@ -137,16 +137,16 @@ if __name__ == "__main__":
 		res = nested_simpson(product_partial,0,200,int(3))	
 		#fx = res[0][-1]
 		show_simp(res)
-		print('Résultat = %.16E' % (fx))
+		
 
 		test = romberg_mod(product_partial,0,200, show=True, tol=1e-16, rtol=1e-16, divmax=20)
 		#fx = test[2][-1][-1]
 		show_rom(test)
 		
+		print('Résultat = %.16E' % (fx))
 		print(f'f(x)_{nb} = {test[3]} (Romberg)')
-
-		print(f'f(x)_{nb} = {y} (Simpson)')
-		lc = simpson(post_partial,0,200,int(1e3))/y
+		print(f'f(x)_{nb} = {fx} (Simpson)')
+		lc = simpson(post_partial,0,200,int(1e3))/fx
 
 		x = np.sort(np.ediff1d(data_time)) # Pour voir lambda
 		print(f'Lambda_{nb} {1/np.mean(x)}') #Lambda
@@ -159,7 +159,7 @@ if __name__ == "__main__":
 		for i in L:
 			res.append((product_partial(i)))
 
-		print(f'Aire sous la courbe des distributions obtenues: {np.sum(res/y)}')
+		print(f'Aire sous la courbe des distributions obtenues: {np.sum(res/fx)}')
 		
 		plt.plot(L, res/fx, 'k')
 		
