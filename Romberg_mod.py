@@ -198,6 +198,7 @@ def romberg_mod(function, a, b, args=(), tol=1.48e-8, rtol=1.48e-8, show=False,
     result = intrange * ordsum
     resmat = [[result]]
     err = np.inf
+    lerr = []
     last_row = resmat[0]
     for i in range(1, divmax+1):
         n *= 2
@@ -210,6 +211,7 @@ def romberg_mod(function, a, b, args=(), tol=1.48e-8, rtol=1.48e-8, show=False,
         if show:
             resmat.append(row)
         err = abs(result - lastresult)
+        lerr.append(err)
         if i > 4:
             pass
             if err < tol or err < rtol * abs(result):
@@ -221,6 +223,6 @@ def romberg_mod(function, a, b, args=(), tol=1.48e-8, rtol=1.48e-8, show=False,
             AccuracyWarning, stacklevel=2)
 
     if show:
-        return (vfunc, interval, resmat, result)
+        return (vfunc, interval, resmat, result, lerr)
     else:
         return result

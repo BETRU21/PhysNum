@@ -34,6 +34,40 @@ def simpson(f: callable, a: float, b: float, N: int):
 		s2 += f(a+i*h)
 	return (f(a)+f(b)+4.0*s1+2.0*s2)*h/3.0
 
+def nested_simpson(f: callable, a: float, b: float, N: int):
+	if N < 3:
+		return 'La valeur minimale est 3, car la méthode de simpson nécessite 3 points par approximation'
+	N0 = N
+	h0 = (b-a)/N
+	even = np.linspace(2, N-2, int((N-2)/2), dtype=int)
+	odd = np.linspace(1, N-1, int((N-1)/2), dtype=int)
+	S0 = (f(a)+f(b)+2*np.sum(list(map(f, a+even*h0))))/3
+	T0 = 2/3*np.sum(list(map(f, a+odd*h0)))
+	res0 = h0*(S0+2*T0)
+	err = np.inf
+	lres = [res0]
+	lerr = [err]
+	while err > 1e-16:
+		
+		N = N*2
+		hi = (b-a)/N
+		Si = S0 + T0
+		Ti = 2/3*np.sum(list(map(f, a+odd*hi)))
+		res = hi*(Si+2*Ti)
+		err = (abs((res-res0))/3)/res
+		if err > lerr[-1]:
+			tes = nested_simpson(f, a, b, N0+1)
+			if tes:
+				return tes
+
+		lres.append(res)
+		lerr.append(err)
+		S0 = Si
+		T0 = Ti
+		res0 = res
+	return lres, lerr, N0, a, b
+
+
 def pi_lambda(Lambda: float, alpha: int, beta: float):
 	return 1/gamma(alpha)*Lambda**(alpha-1)*np.exp(-beta*Lambda)*beta**(alpha)
 
@@ -47,34 +81,64 @@ def product(Lambda, data):
 def post(Lambda, data):
 	return Lambda*product(Lambda, data)
 
+
 def show_rom(test):
-			interval = test[1]
-			resmat = test[2]
-			print('from', interval)
-			print('')
-			print('%6s %9s %9s' % ('Steps', 'StepSize', 'Results'))
-			for i in range(len(resmat)):
-				print('%6d %9f' % (2**i, (interval[1]-interval[0])/(2.**i)), end=' ')
-				for j in range(i+1):
-					print('%.16E' % (resmat[i][j]), end=' ')
-				print('')
-			print('')
-			print('The final result is', resmat[i][j], end=' ')
-			print('after', 2**(len(resmat)-1)+1, 'function evaluations.')
+	
+	interval = test[1]
+	resmat = test[2]
+	err = test[4]
+	print('Méthode de Romberg:\n')
+	print('De lambda = ', interval)
+	print('')
+	print('%6s %9s ' % ('N', 'h'))
+	for i in range(1,len(resmat)-1):
+		print('%6d %9f' % (2**i, (interval[1]-interval[0])/(2.**i)), end=' ')
+		
+		print('Résultat = %.16E' % (resmat[i][-1]), end=' ')
+		print('Erreur = %.16E' % err[i], end=' ')
+		print('Erreur relative = %.16E' % (err[i]/resmat[i][-1]), end=' ')
+		print('')
+	print('')
+	print('Le résultat final est', '%.16E' % (resmat[i][-1]), end=' ')
+	print('après', 2**(len(resmat)-1)+1, 'évaluations de la fonction.')
+
+
+def show_simp(res):
+	interval = [res[-2], res[-1]]
+	r = res[0]
+	err = res[1]
+	print('Méthode de Simpson:\n')
+	print('De lambda = ', interval)
+	print('')
+	print('%6s %9s ' % ('N', 'h'))
+	i = 1
+	for i in range(1, len(r)):
+		print('%6d %9f' % (res[2]*i, (interval[1]-interval[0])/(res[2]*i)), end=' ')
+		print('Résultat = %.16E' % (r[i]), end=' ')
+		print('Erreur relative = %.16E' % (err[i]), end=' ')
+		print('')
+	print('')
+	print('Le résultat final est', '%.16E' % (r[-1]), end=' ')
+	print('avec N = ', res[2]*i,'.')
 
 if __name__ == "__main__":
 	path = os.path.abspath("")
 	files_name = listNameOfFiles(path)
-
+	
 	for nb, name in enumerate(files_name):
+
 		data_time = readTXT(path+"/"+name)
 
 		product_partial = functools.partial(product, data=data_time)
 		post_partial = functools.partial(post, data=data_time)
 
-		y = simpson(product_partial,0,200,int(1e3))	
-		#yr = romberg(product_partial,0,200, show=True, tol=1e-300)
-		test = romberg_mod(product_partial,0,200, show=True, tol=1e-16, divmax=20)
+		y = simpson(product_partial,0,200,int(531))	
+		
+		res = nested_simpson(product_partial,0,200,int(3))	
+		show_simp(res)
+		print('Résultat = %.16E' % (y))
+
+		test = romberg_mod(product_partial,0,200, show=True, tol=1e-16, rtol=1e-16, divmax=20)
 		show_rom(test)
 		
 		print(f'f(x)_{nb} = {test[3]} (Romberg)')
@@ -84,6 +148,6 @@ if __name__ == "__main__":
 
 		x = np.sort(np.ediff1d(data_time)) # Pour voir lambda
 		print(f'Lambda_{nb} {1/np.mean(x)}') #Lambda
-		print(f'Lambda chapeau {nb} = {lc} \n') # lambda 
+		print(f'Lambda chapeau {nb} = {lc} \n') # lambda """
 		
 		
