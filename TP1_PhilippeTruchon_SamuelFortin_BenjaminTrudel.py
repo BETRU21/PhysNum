@@ -149,5 +149,14 @@ if __name__ == "__main__":
 		x = np.sort(np.ediff1d(data_time)) # Pour voir lambda
 		print(f'Lambda_{nb} {1/np.mean(x)}') #Lambda
 		print(f'Lambda chapeau {nb} = {lc} \n') # lambda """
+
+		# Pour graph
 		
+		L = np.linspace(0,200,200)
+		res = []
+		for i in L:
+			res.append((product_partial(i)))
+		
+		plt.plot(L, res/y, 'k')
+		plt.show()
 		
