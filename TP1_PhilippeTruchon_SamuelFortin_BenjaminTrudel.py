@@ -1,11 +1,13 @@
 from scipy.integrate import romberg
 from Romberg_mod import romberg_mod
 from scipy.special import gamma
+from uncertainties import ufloat 
 import matplotlib.pyplot as plt
 import numpy as np
 import functools
 import fnmatch
 import os
+
 
 def listNameOfFiles(directory: str, extension="txt"):
 	found_files = []
@@ -132,36 +134,50 @@ if __name__ == "__main__":
 		product_partial = functools.partial(product, data=data_time)
 		post_partial = functools.partial(post, data=data_time)
 
-		fx = simpson(product_partial,0,200,int(531))	
+		re = simpson(product_partial,0,200,int(531))	
+		fx = ufloat(re , 1e-16*re)
 		
 		res = nested_simpson(product_partial,0,200,int(3))	
-		#fx = res[0][-1]
+		fxs = ufloat(res[0][-1], 1e-16*res[0][-1])
 		show_simp(res)
 		
 
 		test = romberg_mod(product_partial,0,200, show=True, tol=1e-16, rtol=1e-16, divmax=20)
-		#fx = test[2][-1][-1]
+		fxr = ufloat(test[2][-1][-1], 1e-16*test[2][-1][-1])
 		show_rom(test)
 		
-		print('Résultat = %.16E' % (fx))
-		print(f'f(x)_{nb} = {test[3]} (Romberg)')
-		print(f'f(x)_{nb} = {fx} (Simpson)')
-		lc = simpson(post_partial,0,200,int(1e3))/fx
+		print('Résultat méthode Simpson = {:.1uP}'.format(fxs))
+		print('Résultat méthode Romberg = {:.1uP}'.format(fxr))
+		
+		lct = simpson(post_partial,0,200,int(1e3))
+		lc = ufloat(lct, 1e-16*lct)/fx
+		
 
 		x = np.sort(np.ediff1d(data_time)) # Pour voir lambda
-		print(f'Lambda_{nb} {1/np.mean(x)}') #Lambda
-		print(f'Lambda chapeau {nb} = {lc} \n') # lambda """
+		lamb = 1/np.mean(x)
+		fig1 = plt.figure()
+		plt.hist(x)
+		plt.show()
+		print(f'Lambda_{nb} = {lamb}') #Lambda
+		print('Lambda chapeau_{:} = {:.1uP} \n'.format(nb,lc)) # lambda """
 
+		fig2 = plt.figure()
+		plt.plot(x, poisson(x,lamb), 'k', label='$\lambda$') 
+		plt.plot(x, poisson(x,lc.nominal_value),'r', label='$\hat{\lambda}$')
+		plt.yscale('log')
+		plt.legend()
+		plt.show()
 		# Pour graph
 
 		L = np.linspace(0,200,200)
 		res = []
 		for i in L:
 			res.append((product_partial(i)))
+		res = np.array(res)
 
-		print(f'Aire sous la courbe des distributions obtenues: {np.sum(res/fx)}')
-		
-		plt.plot(L, res/fx, 'k')
+		print(f'Aire sous la courbe des distributions obtenues: {np.sum(res/fx.nominal_value)}')
+		fig3 = plt.figure()
+		plt.plot(L, res/fx.nominal_value, 'k')
 		
 		plt.show()
 		
