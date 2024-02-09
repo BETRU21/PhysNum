@@ -155,6 +155,7 @@ if __name__ == "__main__":
 		
 
 		x = np.sort(np.ediff1d(data_time)) # Pour voir lambda
+
 		lamb = 1/np.mean(x)
 		fig1 = plt.figure()
 		plt.hist(x)
@@ -182,5 +183,3 @@ if __name__ == "__main__":
 		
 		plt.show()
 
-		print("yo")
-		
