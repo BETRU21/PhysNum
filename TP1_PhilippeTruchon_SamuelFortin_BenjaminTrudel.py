@@ -181,4 +181,6 @@ if __name__ == "__main__":
 		plt.plot(L, res/fx.nominal_value, 'k')
 		
 		plt.show()
+
+		print("yo")
 		
