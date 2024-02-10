@@ -128,6 +128,8 @@ if __name__ == "__main__":
 	files_name = listNameOfFiles(path)
 	
 	for nb, name in enumerate(files_name):
+		if nb >= 1:
+			break
 
 		data_time = readTXT(path+"/"+name)
 
@@ -136,19 +138,17 @@ if __name__ == "__main__":
 
 		re = simpson(product_partial,0,200,int(531))	
 		fx = ufloat(re , 1e-16*re)
-	
-		
+
 		res = nested_simpson(product_partial,0,200,int(3))	
-		fxs = ufloat(res[0][-1], 1e-16*res[0][-1])
+		fx_simpson = ufloat(res[0][-1], 1e-16*res[0][-1])
 		show_simp(res)
-		
 
 		test = romberg_mod(product_partial,0,200, show=True, tol=1e-16, rtol=1e-16, divmax=20)
-		fxr = ufloat(test[2][-1][-1], 1e-16*test[2][-1][-1])
+		fx_romberg = ufloat(test[2][-1][-1], 1e-16*test[2][-1][-1])
 		show_rom(test)
 
-		print('Résultat méthode Simpson = {:.1uP}'.format(fxs))
-		print('Résultat méthode Romberg = {:.1uP}'.format(fxr))
+		print('Résultat méthode Simpson = {:.1uP}'.format(fx_simpson))
+		print('Résultat méthode Romberg = {:.1uP}'.format(fx_romberg))
 		
 		lct = simpson(post_partial,0,200,int(1e3))
 		lc = ufloat(lct, 1e-16*lct)/fx
