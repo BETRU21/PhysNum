@@ -139,13 +139,11 @@ if __name__ == "__main__":
 		re = simpson(product_partial,0,200,int(531))	
 		fx = ufloat(re , 1e-16*re)
 
-		res = nested_simpson(product_partial,0,200,int(3))	
-		fx_simpson = ufloat(res[0][-1], 1e-16*res[0][-1])
-		show_simp(res)
+		results_simpson = nested_simpson(product_partial,0,200,int(3))	
+		fx_simpson = ufloat(results_simpson[0][-1], 1e-16*results_simpson[0][-1])
 
-		test = romberg_mod(product_partial,0,200, show=True, tol=1e-16, rtol=1e-16, divmax=20)
-		fx_romberg = ufloat(test[2][-1][-1], 1e-16*test[2][-1][-1])
-		show_rom(test)
+		results_romberg = romberg_mod(product_partial,0,200, show=True, tol=1e-16, rtol=1e-16, divmax=20)
+		fx_romberg = ufloat(results_romberg[2][-1][-1], 1e-16*results_romberg[2][-1][-1])
 
 		print('Résultat méthode Simpson = {:.1uP}'.format(fx_simpson))
 		print('Résultat méthode Romberg = {:.1uP}'.format(fx_romberg))
@@ -157,6 +155,7 @@ if __name__ == "__main__":
 		x = np.sort(np.ediff1d(data_time)) # Pour voir lambda
 
 		lamb = 1/np.mean(x)
+
 		fig1 = plt.figure()
 		plt.hist(x)
 		plt.show()
