@@ -2,6 +2,7 @@ import numpy as np
 import warnings
 
 
+# Provient du code source de scipy.integrate
 class AccuracyWarning(Warning):
     pass
 
