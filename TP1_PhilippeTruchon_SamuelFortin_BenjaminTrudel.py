@@ -157,7 +157,7 @@ if __name__ == "__main__":
 		lamb = 1/np.mean(x)
 
 		fig1 = plt.figure()
-		plt.hist(x)
+		plt.hist(x, bins=30)
 		plt.show()
 		print(f'Lambda_{nb} = {lamb}') #Lambda
 		print('Lambda chapeau_{:} = {:.1uP} \n'.format(nb,lc)) # lambda """
