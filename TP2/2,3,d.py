@@ -123,6 +123,7 @@ if __name__ == "__main__":
 	plt.xlim(0,4)
 	plt.plot(xy,xy)
 	plt.plot(xy, f_u(T, xy))
+	plt.plot(xy, df_u(T, xy))
 	plt.plot(X,Y)
 
 
