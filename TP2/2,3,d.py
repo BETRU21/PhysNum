@@ -41,7 +41,9 @@ if __name__ == "__main__":
 
 	ax[0].set_title("Méthode par relaxation")
 	ax[0].plot(T, FU_analytique)
-	ax[0].plot(T, FU, linestyle="-.")
+	ax[0].plot(T, FU, linestyle="--", color="r")
+	ax[0].set_xlabel("T")
+	ax[0].set_ylabel("u_min")
 
 
 	# Newton-Raphson
@@ -66,5 +68,5 @@ if __name__ == "__main__":
 	d_FU = df_u(T, FU)
 
 
-	ax[1].plot(T, FU, linestyle="-.")
+	ax[1].plot(T, FU, linestyle="--", color="r")
 	plt.show()
