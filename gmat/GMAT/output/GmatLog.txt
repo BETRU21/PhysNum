@@ -1,18 +1,28 @@
-GMAT Build Date: Sep 29 2022 10:19:55
+GMAT Build Date: Jan 10 2023 17:58:52
 
-GMAT Log file set to C:\Users\gsfc580gmatbuild\Documents\GmatDevelopment\application\bin\..\output\GmatLog.txt
+GMAT Log file set to C:\Users\phili.000\PhysNum\gmat\GMAT\bin\..\output\GmatLog.txt
 Moderator is updating data files...
 Moderator is creating core engine...
-*** Library "..\plugins\libOpenFramesInterface" did not open.
+*** Library "..\plugins\libPythonInterface_py39" did not open.
+*** Library "..\plugins\libMatlabInterface" did not open.
+*** Library "..\plugins\libFminconOptimizer" did not open.
 Successfully set Planetary Source to use: DE405
 Successfully set Planetary Source to use: DE405
 Successfully set Planetary Source to use: DE405
-Setting nutation file to C:\Users\gsfc580gmatbuild\Documents\GmatDevelopment\application\bin\..\data\planetary_coeff\NUTATION.DAT
-Setting leap seconds file to C:\Users\gsfc580gmatbuild\Documents\GmatDevelopment\application\bin\..\data\time\tai-utc.dat
-2022-09-29 10:43:49 GMAT Moderator successfully created core engine
+Setting nutation file to C:\Users\phili.000\PhysNum\gmat\GMAT\bin\..\data\planetary_coeff\NUTATION.DAT
+Setting leap seconds file to C:\Users\phili.000\PhysNum\gmat\GMAT\bin\..\data\time\tai-utc.dat
+2024-04-11 10:27:56 GMAT Moderator successfully created core engine
 Successfully set Planetary Source to use: DE405
 Successfully set Planetary Source to use: DE405
-2022-09-29 10:43:49 GMAT GUI successfully launched.
-*** Unable to load the dynamic library "..\plugins\libOpenFramesInterface"
+2024-04-11 10:27:57 GMAT GUI successfully launched.
+*** Error loading "..\plugins\libPythonInterface_py39": GMAT could not load the Python interface. Please check that bin/gmat_startup_file.txt contains the PLUGIN line for "libPythonInterface_py3X" corresponding to an installed Python 3.X distribution. See the User Guide for instructions, or disable the appropriate PLUGIN line in bin/gmat_startup_file.txt to remove this error.
+*** Error loading "libMatlabInterface": GMAT could not load the MATLAB interface. Please check that MATLAB is installed and configured correctly.  See the User Guide for instructions, or disable the appropriate PLUGIN line in bin/gmat_startup_file.txt to remove this error.
+*** Error loading "libFminconOptimizer": Either libMatlabInterface could not load or is disabled, or the MATLAB Optimization Toolbox is not available.  Disable the appropriate PLUGIN line in bin/gmat_startup_file.txt to remove this error.
+
+Interpreting scripts from the file.
+***** file: ../samples/NeedOpenFramesInterface/Ex_R2020a_OFI_LunarTransfer.script
+Successfully set Planetary Source to use: DE405
+Successfully set Planetary Source to use: DE405
+Successfully interpreted the script
 Moderator is deleting core engine...
-2022-09-29 10:43:55 GMAT GUI exiting.
+2024-04-11 10:33:44 GMAT GUI exiting.
