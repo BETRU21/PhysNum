@@ -1,0 +1,18 @@
+GMAT Build Date: Sep 29 2022 10:19:55
+
+GMAT Log file set to C:\Users\gsfc580gmatbuild\Documents\GmatDevelopment\application\bin\..\output\GmatLog.txt
+Moderator is updating data files...
+Moderator is creating core engine...
+*** Library "..\plugins\libOpenFramesInterface" did not open.
+Successfully set Planetary Source to use: DE405
+Successfully set Planetary Source to use: DE405
+Successfully set Planetary Source to use: DE405
+Setting nutation file to C:\Users\gsfc580gmatbuild\Documents\GmatDevelopment\application\bin\..\data\planetary_coeff\NUTATION.DAT
+Setting leap seconds file to C:\Users\gsfc580gmatbuild\Documents\GmatDevelopment\application\bin\..\data\time\tai-utc.dat
+2022-09-29 10:43:49 GMAT Moderator successfully created core engine
+Successfully set Planetary Source to use: DE405
+Successfully set Planetary Source to use: DE405
+2022-09-29 10:43:49 GMAT GUI successfully launched.
+*** Unable to load the dynamic library "..\plugins\libOpenFramesInterface"
+Moderator is deleting core engine...
+2022-09-29 10:43:55 GMAT GUI exiting.
