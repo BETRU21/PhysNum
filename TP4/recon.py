@@ -38,33 +38,43 @@ def readInput():
 
 
 ## reconstruire une image TDM en mode rétroprojection
-def laminogram():
-    
+def laminogram_with_for_loop():
     [nbprj, angles, sinogram] = readInput()
+    image = np.zeros((geo.nbvox, geo.nbvox))
+    center = geo.nbvox // 2
 
-    # initialiser une image reconstruite
+    # "Étaler" les projections sur l'image
+    # Ceci sera fait de façon "voxel-driven"
+    # Pour chaque voxel, trouver la contribution du signal reçu
+    for j in range(geo.nbvox):  # Colonnes de l'image
+        print("working on image column: " + str(j + 1) + "/" + str(geo.nbvox))
+        for i in range(geo.nbvox):  # Lignes de l'image
+            for a in range(len(angles)):
+                angle = angles[a]
+                det_pos = (j - center) * np.cos(angle) + (i - center) * np.sin(angle)
+                det_index = int(np.round(det_pos + len(sinogram[0]) / 2))
+                if det_index >= 0 and det_index < len(sinogram[0]):
+                    image[i, j] += sinogram[a, det_index]
+    util.saveImage(image, "lam")
+
+def laminogram():
+    nbprj, angles, sinogram = readInput()
     image = np.zeros((geo.nbvox, geo.nbvox))
 
-    # "etaler" les projections sur l'image
-    # ceci sera fait de façon "voxel-driven"
-    # pour chaque voxel, trouver la contribution du signal reçu
-    for j in range(geo.nbvox): # colonnes de l'image
-        print("working on image column: "+str(j+1)+"/"+str(geo.nbvox))
-        for i in range(geo.nbvox): # lignes de l'image
-            for a in range(len(angles)):
-                #votre code ici...
-                #le défi est simplement géométrique;
-                #pour chaque voxel, trouver la position par rapport au centre de la
-                #grille de reconstruction et déterminer la position d'arrivée
-                #sur le détecteur d'un rayon partant de ce point et atteignant
-                #le détecteur avec un angle de 90 degrés. Vous pouvez utiliser
-                #le pixel le plus proche ou interpoler linéairement...Rappel, le centre
-                #du détecteur est toujours aligné avec le centre de la grille de
-                #reconstruction peu importe l'angle.
-                
-                
-                
-                
+    center = geo.nbvox // 2
+
+    x_coords, y_coords = np.meshgrid(np.arange(geo.nbvox), np.arange(geo.nbvox))
+    x_coords_centered = x_coords - center
+    y_coords_centered = y_coords - center
+
+    det_pos = x_coords_centered[..., None] * np.cos(angles) + y_coords_centered[..., None] * np.sin(angles)
+    det_indices = np.round(det_pos + len(sinogram[0]) / 2).astype(int)
+    det_indices = np.clip(det_indices, 0, len(sinogram[0]) - 1)
+
+    for a in range(len(angles)):
+        image += sinogram[a, det_indices[:,:,a]]
+
+    image = np.flip(image,1)
     util.saveImage(image, "lam")
 
 
@@ -87,10 +97,11 @@ def backproject():
         print("working on image column: "+str(j+1)+"/"+str(geo.nbvox))
         for i in range(geo.nbvox): # lignes de l'image
             for a in range(len(angles)):
+                pass
                 #votre code ici
                #pas mal la même chose que prédédemment
-            #mais avec un sinogramme qui aura été préalablement filtré
-    
+                #mais avec un sinogramme qui aura été préalablement filtré
+
     util.saveImage(image, "fbp")
 
 
