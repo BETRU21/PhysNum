@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from skimage.transform import iradon
 
-x, y, sinogram = readSinogram("data/sinogram-password.txt")
+x, y, sinogram = readSinogram("data/sinogram-patient.txt")
 y, angles = readAngles("data/angles.txt")
 
 sinogramExample = np.swapaxes(sinogram, 0,1)
@@ -15,9 +15,3 @@ ax[0].imshow(sinogram, cmap="gray")
 ax[1].imshow(image_reconstruite, cmap="gray")
 plt.show()
 
-# 0
-# 0
-# 360
-# 336
-# (96, 96) image
-# (720, 336) sinogram

@@ -13,15 +13,16 @@ import time
 import geo as geo
 import util as util
 import CTfilter as CTfilter
+import matplotlib.pyplot as plt
 
 ## créer l'ensemble de données d'entrée à partir des fichiers
 def readInput():
     # lire les angles
     [nbprj, angles] = util.readAngles(geo.dataDir+geo.anglesFile)
 
-    print("nbprj:",nbprj)
-    print("angles min and max (rad):")
-    print("["+str(np.min(angles))+", "+str(np.max(angles))+"]")
+    # print("nbprj:",nbprj)
+    # print("angles min and max (rad):")
+    # print("["+str(np.min(angles))+", "+str(np.max(angles))+"]")
 
     # lire le sinogramme
     [nbprj2, nbpix2, sinogram] = util.readSinogram(geo.dataDir+geo.sinogramFile)
@@ -80,7 +81,6 @@ def laminogram():
 
 ## reconstruire une image TDM en mode retroprojection filtrée
 def backproject():
-    
     [nbprj, angles, sinogram] = readInput()
     
     # initialiser une image reconstruite
@@ -89,18 +89,21 @@ def backproject():
     ### option filtrer ###
     CTfilter.filterSinogram(sinogram)
     ######
-    
-    # "etaler" les projections sur l'image
-    # ceci sera fait de façon "voxel-driven"
-    # pour chaque voxel, trouver la contribution du signal reçu
-    for j in range(geo.nbvox): # colonnes de l'image
-        print("working on image column: "+str(j+1)+"/"+str(geo.nbvox))
-        for i in range(geo.nbvox): # lignes de l'image
-            for a in range(len(angles)):
-                pass
-                #votre code ici
-               #pas mal la même chose que prédédemment
-                #mais avec un sinogramme qui aura été préalablement filtré
+
+    center = geo.nbvox // 2
+
+    x_coords, y_coords = np.meshgrid(np.arange(geo.nbvox), np.arange(geo.nbvox))
+    x_coords_centered = x_coords - center
+    y_coords_centered = y_coords - center
+
+    det_pos = x_coords_centered[..., None] * np.cos(angles) + y_coords_centered[..., None] * np.sin(angles)
+    det_indices = np.round(det_pos + len(sinogram[0]) / 2).astype(int)
+    det_indices = np.clip(det_indices, 0, len(sinogram[0]) - 1)
+
+    for a in range(len(angles)):
+        image += sinogram[a, det_indices[:,:,a]]
+
+    image = np.flip(image,1)
 
     util.saveImage(image, "fbp")
 
@@ -135,7 +138,7 @@ def reconFourierSlice():
 ## main ##
 start_time = time.time()
 laminogram()
-#backproject()
+backproject()
 #reconFourierSlice()
 print("--- %s seconds ---" % (time.time() - start_time))
 
