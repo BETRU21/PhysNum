@@ -1,7 +1,9 @@
+#https://codereview.stackexchange.com/questions/281398/solar-system-simulation-with-real-values-in-pygame 
+
 import sys
 import pygame
 from pygame.locals import *
-from pygame.math import Vector2, Vector3
+from pygame.math import Vector2
 import math
 from astroquery.jplhorizons import Horizons
 from astropy.time import Time
@@ -230,7 +232,7 @@ def render_win_info():
     win.blit(scale_text, (15, 75))
     win.blit(timestep_text, (15, 95))
 
-
+#for _ in range(10000):
 while run:
     clock.tick(100)
     win.fill(BLACK)
