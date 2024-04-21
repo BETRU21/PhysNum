@@ -1,8 +1,14 @@
 import sys
 import pygame
 from pygame.locals import *
-from pygame.math import Vector2
+from pygame.math import Vector2, Vector3
 import math
+from astroquery.jplhorizons import Horizons
+from astropy.time import Time
+import numpy as np
+import warnings
+
+warnings.simplefilter('ignore', UserWarning)
 
 pygame.display.init()
 pygame.font.init()
@@ -47,14 +53,16 @@ def convert_to_real_pos(pos):
     return real_pos
 
 class Planet:
-    def __init__(self, name, pos, color, mass, radius, orbital_period, y_vel):
+    def __init__(self, name, pos, color, mass, radius, orbital_period, vel):
         self.name = name
         self.pos = pos
         self.color = color
         self.mass = mass
         self.radius = radius
-        self.x_vel = 0
-        self.y_vel = y_vel
+        self.x_vel = vel[0]
+        self.y_vel = vel[1]
+        self.x_vel_h = 0
+        self.y_vel_h = 0
         self.orbital_period = orbital_period
         self.orbit_counter = 0
         self.orbit = []
@@ -73,7 +81,7 @@ class Planet:
             win,
             self.color,
             convert_to_win_pos(self.pos),
-            self.radius
+            self.radius*SCALE*AU/100
         )
 
     def render_info(self, win, sun):
@@ -84,7 +92,7 @@ class Planet:
         mass_text = FONT.render(f"Mass: {self.mass}", 1, self.color)
         orbital_period_text = FONT.render(f"Orbital period: {self.orbital_period} days", 1, self.color)
         distance_text = FONT.render(f"Distance from sun: {round(distance_from_sun):,}km", 1, self.color)
-        vel_text = FONT.render(f"Velocity: {round(self.y_vel / 1000, 2):,} km/s", 1, self.color)
+        vel_text = FONT.render(f"Velocity: {round(np.sqrt(self.x_vel**2+self.y_vel**2) / 1000, 2):,} km/s", 1, self.color)
 
         # Rendering the labels...
         alignment = max(
@@ -112,12 +120,24 @@ class Planet:
             force_x, force_y = self.gravity(planet)
             total_force_x += force_x
             total_force_y += force_y
+        
+        self.x_vel_h = self.x_vel+0.5*(total_force_x / self.mass) * TIME_STEP
+        self.y_vel_h = self.y_vel+0.5*(total_force_y / self.mass) * TIME_STEP
 
         # F = ma, a = F / m
-        self.x_vel += total_force_x / self.mass * TIME_STEP
-        self.y_vel += total_force_y / self.mass * TIME_STEP
-        self.pos.x += self.x_vel * TIME_STEP
-        self.pos.y += self.y_vel * TIME_STEP
+        self.pos.x = self.pos.x + self.x_vel_h * TIME_STEP 
+        self.pos.y = self.pos.y + self.y_vel_h * TIME_STEP 
+
+        total_force_x2 = total_force_y2 = 0
+        for planet in planets:
+            if planet == self:
+                continue
+            force_x2, force_y2 = self.gravity(planet)
+            total_force_x2 += force_x2
+            total_force_y2 += force_y2
+
+        self.x_vel = self.x_vel_h + 0.5*(total_force_x2 / self.mass) * TIME_STEP
+        self.y_vel = self.y_vel_h + 0.5*(total_force_y2 / self.mass) * TIME_STEP
 
         if self.name == "Sun": # Do not render orbit for sun
             return
@@ -143,41 +163,53 @@ class Planet:
         return force_x, force_y
 
 
-sun = Planet("Sun", Vector2(0, 0), YELLOW, 1.9891e30, 20, 0, 0)
+sim_start_date = "1846-08-31"
+time = Time(sim_start_date).jd
+def get_pos(id):
+    pos = Horizons(id=id, location="@sun", epochs=time, id_type=None).vectors()
+    xi = [np.double(pos[xi]) for xi in ['x', 'y', 'z']]
+    vxi = [np.double(pos[xi]) for xi in ['vx', 'vy', 'vz']]
+    Vx = Vector2(xi[0]*1.496e11, xi[1]*1.496e11)
+    Vvx = Vector2(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24))
+    return Vx, Vvx
+
+
+sun = Planet("Sun", Vector2(0, 0), YELLOW, 1.9891e30, 22, 0, (0,0))
 mercury = Planet(
-    "Mercury", Vector2(5.79e10, 0),
-    DARK_GREY, 3.30e23, 7.5, 88, 47.87e3
+    "Mercury", get_pos('1')[0],
+    DARK_GREY, 3.30e23, 7.5, 88, get_pos('1')[1]
 )
 venus = Planet(
-    "Venus", Vector2(1.082e11, 0),
-    PEARL_WHITE, 4.87e24, 8.5, 224.7, -35.02e3
+    "Venus", get_pos('2')[0],
+    PEARL_WHITE, 4.87e24, 8.5, 224.7, get_pos('2')[1]
 )
 earth = Planet(
-    "Earth", Vector2(1.496e11, 0),
-    BLUE, 5.97e24, 9, 365.2, 29.783e3
+    "Earth", get_pos('3')[0],
+    BLUE, 5.97e24, 9, 365.2, get_pos('3')[1]
 )
 mars = Planet(
-    "Mars", Vector2(2.28e11, 0),
-    RED, 6.42e23, 8.75, 687, 24.077e3
+    "Mars", get_pos('4')[0],
+    RED, 6.42e23, 8.75, 687, get_pos('4')[1]
 )
 jupiter = Planet(
-    "Jupiter", Vector2(7.785e11, 0),
-    BROWN, 1.898e27, 12, 4331, 13.07e3
+    "Jupiter", get_pos('5')[0],
+    BROWN, 1.898e27, 18, 4331, get_pos('5')[1]
 )
 saturn = Planet(
-    "Saturn", Vector2(1.432e12, 0),
-    YELLOWISH_BROWN, 5.68e26, 10, 10747, 9.69e3
+    "Saturn", get_pos('6')[0],
+    YELLOWISH_BROWN, 5.68e26, 16, 10747, get_pos('6')[1]
 )
 uranus = Planet(
-    "Uranus", Vector2(2.867e12, 0),
-    CYAN, 8.68e25, 9, 30589, -6.81e3
+    "Uranus", get_pos('7')[0],
+    CYAN, 8.68e25, 14, 30589, get_pos('7')[1]
 )
 neptune = Planet(
-    "Neptune", Vector2(4.515e12, 0),
-    BLUE, 1.02e26, 9.75, 59800, 5.43e3
+    "Neptune", get_pos('8')[0],
+    BLUE, 1.02e26, 12, 59800, get_pos('8')[1]
 )
 
-planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune,]
+planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus]
+#planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
 selected_planet = uranus
 
 run = True
@@ -197,6 +229,7 @@ def render_win_info():
     win.blit(y_text, (15, 55))
     win.blit(scale_text, (15, 75))
     win.blit(timestep_text, (15, 95))
+
 
 while run:
     clock.tick(100)
