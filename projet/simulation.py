@@ -1,7 +1,9 @@
 #https://codereview.stackexchange.com/questions/281398/solar-system-simulation-with-real-values-in-pygame 
 
 import sys
-import pygame
+import contextlib
+with contextlib.redirect_stdout(None):
+    import pygame
 from pygame.locals import *
 from pygame.math import Vector2
 import math
@@ -9,7 +11,7 @@ from astroquery.jplhorizons import Horizons
 from astropy.time import Time
 import numpy as np
 import warnings
-import time as tt
+import json
 
 warnings.simplefilter('ignore', UserWarning)
 
@@ -70,7 +72,6 @@ class Planet:
         self.orbital_period = orbital_period
         self.orbit_counter = 0
         self.orbit = []
-        self.exp_orbit = []
 
     def render(self, win):
         "Render the planet and orbit on the window."
@@ -114,7 +115,7 @@ class Planet:
         # Rendering line joining planet and sun
         planet_pos = convert_to_win_pos(self.pos)
         sun_pos = convert_to_win_pos(sun.pos)
-        pygame.draw.line(win, self.color, planet_pos, sun_pos, 2)
+        pygame.draw.line(win, self.color, planet_pos, sun_pos, 1)
 
     def update_position(self, planets):
         "Updates the position considering gravity of other planets"
@@ -147,13 +148,8 @@ class Planet:
         if self.name == "Sun": # Do not render orbit for sun
             return
 
-        point_dist = self.orbital_period // 80
-        self.orbit_counter += 1
-        if self.orbit_counter >= point_dist:
-            self.orbit_counter = 0
-            self.orbit.append([*self.pos])
-            if len(self.orbit) > (self.orbital_period / point_dist) + 1:
-                del self.orbit[0]
+        self.orbit.append([*self.pos])
+
 
     def gravity(self, other):
         distance_x = other.pos.x - self.pos.x
@@ -258,13 +254,12 @@ neptune = Planet(
 exp_uranus = exp_Planet("exp_Uranus",
     GREEN, 30589, sim_start_date, '7', 14
 )
-planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus]
-#planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
-selected_planet = uranus
+
 
 run = True
 drag = False
 drag_start = None
+liste_delta = {}
 
 def render_win_info():
     "Renders window related info such as x-pos, y-pos, scale, fps and timestep..."
@@ -286,23 +281,31 @@ def render_win_info():
     distance_text = FONT.render(f"Distance from sun: {round(distance_from_sun):,}km", 1, exp_uranus.color)
     vel_text = FONT.render(f"Velocity: {round(exp_uranus.Vv/ 1000, 2):,} km/s", 1, exp_uranus.color)
     date_text = FONT.render(f"Date: {exp_uranus.tt}", 1, exp_uranus.color)
+    liste_delta[i] = [((exp_uranus.pos-uranus.pos)[0]),((exp_uranus.pos-uranus.pos)[1])]
+    delta_text = FONT.render("Delta_x= {:.2e}, Delta_y= {:.2e}".format((exp_uranus.pos-uranus.pos)[0], (exp_uranus.pos-uranus.pos)[1]), 1, exp_uranus.color)
     win.blit(name_text, (15, 380))
     win.blit(distance_text, (15, 400))
     win.blit(vel_text, (15, 420))
     win.blit(date_text, (15, 440))
-    win.blit(timestep_text, (15, 460))
+    win.blit(delta_text, (15, 460))
 
 
-
-
-#for _ in range(10000):
-i = 0
-while run:
+planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus]
+#planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
+selected_planet = uranus
+path = 'projet\\'
+file_name = 'simul_sans_neptune'
+extension = '.json'
+i = 1
+for _ in range(1000):
+#while run:
     clock.tick(100)
     win.fill(BLACK)
 
     for event in pygame.event.get():
         if event.type == QUIT:
+            with open(path+file_name+extension, "w") as output:
+                json.dump(liste_delta, output)
             pygame.quit()
             sys.exit()
         elif event.type == KEYDOWN:
@@ -335,11 +338,17 @@ while run:
     if keys_pressed[K_DOWN]:
         SCALE -= 1/AU # Zoom out
 
+    exp_uranus.exp_planet(i)
     for planet in planets:
         planet.update_position(planets)
         planet.render(win)
-    exp_uranus.exp_planet(i)
+        
+    
     i += 1
     selected_planet.render_info(win, sun)
     render_win_info()
     pygame.display.update()
+
+
+with open(path+file_name+extension, "w") as output:
+    json.dump(liste_delta, output)
