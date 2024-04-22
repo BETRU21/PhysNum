@@ -9,6 +9,7 @@ from astroquery.jplhorizons import Horizons
 from astropy.time import Time
 import numpy as np
 import warnings
+import time as tt
 
 warnings.simplefilter('ignore', UserWarning)
 
@@ -26,7 +27,7 @@ LARGE_FONT = pygame.font.SysFont("Tahoma", 26)
 AU = 1.496e8 * 1000 # km to m
 G = 6.67428e-11
 SCALE = 15 / AU
-TIME_STEP = 3600 * 24 * 2 # 1 day
+TIME_STEP = 3600 * 24 * 2 # 2 day
 WIN_CENTER = Vector2(WIDTH // 2, HEIGHT // 2)
 
 BLACK = "#000000"
@@ -40,6 +41,7 @@ ORANGE = "#FFA500"
 BROWN = "#964B00"
 YELLOWISH_BROWN = "#9B7A01"
 CYAN = "#00FFFF"
+GREEN = '#1ee635'
 
 def convert_to_win_pos(pos):
     "Converts a position in the real universe to window coordinates"
@@ -68,6 +70,7 @@ class Planet:
         self.orbital_period = orbital_period
         self.orbit_counter = 0
         self.orbit = []
+        self.exp_orbit = []
 
     def render(self, win):
         "Render the planet and orbit on the window."
@@ -164,6 +167,48 @@ class Planet:
 
         return force_x, force_y
 
+class exp_Planet:
+    def __init__(self, name, color, orbital_period, t0, id, radius):
+        self.name = name
+        self.lpos = Horizons(id=id, location="@sun", epochs={'start': t0,
+                        'stop': '2024-04-21',
+                        'step': '2d'}, id_type=None).vectors()
+        self.color = color
+        self.t = Time(sim_start_date).jd
+        self.radius = radius
+        self.orbital_period = orbital_period
+        self.orbit_counter = 0
+        self.exp_orbit = []
+        
+
+    def render(self, win):
+        "Render the planet and orbit on the window."
+        # Rendering orbit...
+        if len(self.exp_orbit) > 1:
+            scaled_points = []
+            for x, y in self.exp_orbit:
+                scaled_points.append(convert_to_win_pos((x, y)))
+            pygame.draw.lines(win, self.color, False, scaled_points, 1)
+
+        # Rendering planet...
+        pygame.draw.circle(
+            win,
+            self.color,
+            convert_to_win_pos(self.pos),
+            self.radius*SCALE*AU/100
+        )
+
+    def exp_planet(self, i):
+        xi = [np.double(self.lpos[i][xi]) for xi in ['x', 'y', 'z']]
+        self.pos = Vector2(xi[0]*1.496e11, xi[1]*1.496e11)
+        vxi = [np.double(self.lpos[i][xi]) for xi in ['vx', 'vy', 'vz']]
+        self.Vv = Vector2(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24)).magnitude()
+        self.exp_orbit.append(self.pos)
+        self.tt = Time(self.t, format='jd', out_subfmt='str').iso[:-13]
+        self.t += 2
+        self.render(win)
+
+    
 
 sim_start_date = "1846-08-31"
 time = Time(sim_start_date).jd
@@ -210,6 +255,9 @@ neptune = Planet(
     BLUE, 1.02e26, 12, 59800, get_pos('8')[1]
 )
 
+exp_uranus = exp_Planet("exp_Uranus",
+    GREEN, 30589, sim_start_date, '7', 14
+)
 planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus]
 #planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
 selected_planet = uranus
@@ -232,7 +280,23 @@ def render_win_info():
     win.blit(scale_text, (15, 75))
     win.blit(timestep_text, (15, 95))
 
+
+    distance_from_sun = exp_uranus.pos.distance_to(sun.pos)
+    name_text = FONT.render(f"Name: {exp_uranus.name}", 1, exp_uranus.color)
+    distance_text = FONT.render(f"Distance from sun: {round(distance_from_sun):,}km", 1, exp_uranus.color)
+    vel_text = FONT.render(f"Velocity: {round(exp_uranus.Vv/ 1000, 2):,} km/s", 1, exp_uranus.color)
+    date_text = FONT.render(f"Date: {exp_uranus.tt}", 1, exp_uranus.color)
+    win.blit(name_text, (15, 380))
+    win.blit(distance_text, (15, 400))
+    win.blit(vel_text, (15, 420))
+    win.blit(date_text, (15, 440))
+    win.blit(timestep_text, (15, 460))
+
+
+
+
 #for _ in range(10000):
+i = 0
 while run:
     clock.tick(100)
     win.fill(BLACK)
@@ -274,7 +338,8 @@ while run:
     for planet in planets:
         planet.update_position(planets)
         planet.render(win)
-
+    exp_uranus.exp_planet(i)
+    i += 1
     selected_planet.render_info(win, sun)
     render_win_info()
     pygame.display.update()
