@@ -282,7 +282,8 @@ def render_win_info():
     vel_text = FONT.render(f"Velocity: {round(exp_uranus.Vv/ 1000, 2):,} km/s", 1, exp_uranus.color)
     date_text = FONT.render(f"Date: {exp_uranus.tt}", 1, exp_uranus.color)
 
-    liste_delta[i] = [((exp_uranus.pos-uranus.pos)[0]),((exp_uranus.pos-uranus.pos)[1])]
+    with open(path+file_name+extension, "a") as output:
+        output.write(str((exp_uranus.pos-uranus.pos)[0])+','+str((exp_uranus.pos-uranus.pos)[1])+'\n')
 
     delta_text = FONT.render("Delta_x= {:.2e}, Delta_y= {:.2e}".format((exp_uranus.pos-uranus.pos)[0], (exp_uranus.pos-uranus.pos)[1]), 1, exp_uranus.color)
     win.blit(name_text, (15, 380))
@@ -292,22 +293,22 @@ def render_win_info():
     win.blit(delta_text, (15, 460))
 
 
-#planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus]
-planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
+planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus]
+#planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
 selected_planet = uranus
 path = 'projet\\'
-file_name = 'temp'
-extension = '.json'
+file_name = 'simul_sans_neptune'
+extension = '.txt'
+with open(path+file_name+extension, "w") as output:
+    output.write('')
 i = 1
-#for _ in range(1000):
-while run:
+for _ in range(4000):
+#while run:
     clock.tick(100)
     win.fill(BLACK)
 
     for event in pygame.event.get():
         if event.type == QUIT:
-            with open(path+file_name+extension, "w") as output:
-                json.dump(liste_delta, output)
             pygame.quit()
             sys.exit()
         elif event.type == KEYDOWN:
@@ -353,13 +354,10 @@ while run:
     for planet in planets:
         planet.update_position(planets)
         planet.render(win)
+
         
     
     i += 1
     selected_planet.render_info(win, sun)
     render_win_info()
     pygame.display.update()
-
-
-with open(path+file_name+extension, "w") as output:
-    json.dump(liste_delta, output)

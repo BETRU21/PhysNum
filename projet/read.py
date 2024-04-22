@@ -15,21 +15,16 @@ files = os.listdir(path)
 i = 0
 ls = ['-', (0, (5,8))]
 fig = plt.figure()
+
 for f in files:
-    if f[-5:] == '.json':
-        with open(path+f, "r") as j:
-            data = json.load(j)
+    if f[-4:] == '.txt' and f[:-4] != 'temp':
+        
+        data = np.loadtxt(path+f, delimiter=',')
+        print(data)
+        time = np.linspace(2, len(data[:,0])*2, len(data[:,0]))
 
-        delta_x = []
-        delta_y = []
-        time = []
-        for k in data.keys():
-            time.append(int(k)*2)
-            delta_x.append(data[k][0])
-            delta_y.append(data[k][1])
-
-        plt.plot(time, delta_x, label=f'$\\Delta_x$ {f[:-5]}', linestyle=ls[i])
-        plt.plot(time, delta_y, label=f'$\\Delta_y$ {f[:-5]}', linestyle=ls[i])
+        plt.plot(time, data[:,0], label=f'$\\Delta_x$ {f[:-5]}', linestyle=ls[i])
+        plt.plot(time, data[:,1], label=f'$\\Delta_y$ {f[:-5]}', linestyle=ls[i])
         plt.xlabel('Temps [jour]')
         plt.ylabel('Delta [km]')
         plt.legend()
