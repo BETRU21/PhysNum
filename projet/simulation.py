@@ -281,7 +281,9 @@ def render_win_info():
     distance_text = FONT.render(f"Distance from sun: {round(distance_from_sun):,}km", 1, exp_uranus.color)
     vel_text = FONT.render(f"Velocity: {round(exp_uranus.Vv/ 1000, 2):,} km/s", 1, exp_uranus.color)
     date_text = FONT.render(f"Date: {exp_uranus.tt}", 1, exp_uranus.color)
+
     liste_delta[i] = [((exp_uranus.pos-uranus.pos)[0]),((exp_uranus.pos-uranus.pos)[1])]
+    
     delta_text = FONT.render("Delta_x= {:.2e}, Delta_y= {:.2e}".format((exp_uranus.pos-uranus.pos)[0], (exp_uranus.pos-uranus.pos)[1]), 1, exp_uranus.color)
     win.blit(name_text, (15, 380))
     win.blit(distance_text, (15, 400))
@@ -290,15 +292,15 @@ def render_win_info():
     win.blit(delta_text, (15, 460))
 
 
-planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus]
-#planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
+#planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus]
+planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
 selected_planet = uranus
 path = 'projet\\'
-file_name = 'simul_sans_neptune'
+file_name = 'temp'
 extension = '.json'
 i = 1
-for _ in range(1000):
-#while run:
+#for _ in range(1000):
+while run:
     clock.tick(100)
     win.fill(BLACK)
 
