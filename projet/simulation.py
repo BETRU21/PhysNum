@@ -283,7 +283,7 @@ def render_win_info():
     date_text = FONT.render(f"Date: {exp_uranus.tt}", 1, exp_uranus.color)
 
     liste_delta[i] = [((exp_uranus.pos-uranus.pos)[0]),((exp_uranus.pos-uranus.pos)[1])]
-    
+
     delta_text = FONT.render("Delta_x= {:.2e}, Delta_y= {:.2e}".format((exp_uranus.pos-uranus.pos)[0], (exp_uranus.pos-uranus.pos)[1]), 1, exp_uranus.color)
     win.blit(name_text, (15, 380))
     win.blit(distance_text, (15, 400))
@@ -333,12 +333,21 @@ while run:
                 drag_start = pygame.mouse.get_pos()
         elif event.type == VIDEORESIZE:
             WIDTH, HEIGHT = pygame.display.get_surface().get_size()
+        elif event.type == MOUSEWHEEL:
+            if event.y == 1:
+                SCALE += 5/AU # Zoom in
+            if event.y == -1:
+                SCALE -= 5/AU # Zoom out
+                if SCALE <= 0:
+                    SCALE += 5/AU
 
     keys_pressed = pygame.key.get_pressed()
     if keys_pressed[K_UP]:
         SCALE += 1/AU # Zoom in
     if keys_pressed[K_DOWN]:
         SCALE -= 1/AU # Zoom out
+        if SCALE <= 0:
+            SCALE += 5/AU
 
     exp_uranus.exp_planet(i)
     for planet in planets:
