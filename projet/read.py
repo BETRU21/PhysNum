@@ -7,10 +7,10 @@ import matplotlib as mpl
 
 # Set the default color cycle
 cmap = plt.get_cmap('jet')
-colors = cmap(np.linspace(0, 1, 16))
+colors = cmap(np.linspace(0, 1, 4))
 
 plt.rc('axes', prop_cycle=(cycler('color', colors) +
-                           cycler('linestyle', ['-', '--', ':', '-.']*4)))
+                           cycler('linestyle', ['-', '--', ':', '-.'])))
 
 path = 'projet\\'
 files = os.listdir(path)
