@@ -5,13 +5,12 @@ import contextlib
 with contextlib.redirect_stdout(None):
     import pygame
 from pygame.locals import *
-from pygame.math import Vector2
+from pygame.math import Vector2, Vector3
 import math
 from astroquery.jplhorizons import Horizons
 from astropy.time import Time
 import numpy as np
 import warnings
-import json
 
 warnings.simplefilter('ignore', UserWarning)
 
@@ -67,8 +66,10 @@ class Planet:
         self.radius = radius
         self.x_vel = vel[0]
         self.y_vel = vel[1]
+        self.z_vel = vel[2]
         self.x_vel_h = 0
         self.y_vel_h = 0
+        self.z_vel_h = 0
         self.orbital_period = orbital_period
         self.orbit_counter = 0
         self.orbit = []
@@ -78,7 +79,7 @@ class Planet:
         # Rendering orbit...
         if len(self.orbit) > 1:
             scaled_points = []
-            for x, y in self.orbit:
+            for x, y, z in self.orbit:
                 scaled_points.append(convert_to_win_pos((x, y)))
             pygame.draw.lines(win, self.color, False, scaled_points, 2)
 
@@ -119,49 +120,64 @@ class Planet:
 
     def update_position(self, planets):
         "Updates the position considering gravity of other planets"
-        total_force_x = total_force_y = 0
+        total_force_x = total_force_y = total_force_z = 0
         for planet in planets:
             if planet == self:
                 continue
-            force_x, force_y = self.gravity(planet)
+            force_x, force_y, force_z = self.gravity(planet)
             total_force_x += force_x
             total_force_y += force_y
+            total_force_z += force_z
         
         self.x_vel_h = self.x_vel+0.5*(total_force_x / self.mass) * TIME_STEP
         self.y_vel_h = self.y_vel+0.5*(total_force_y / self.mass) * TIME_STEP
+        self.z_vel_h = self.z_vel+0.5*(total_force_z / self.mass) * TIME_STEP
 
         # F = ma, a = F / m
         self.pos.x = self.pos.x + self.x_vel_h * TIME_STEP 
         self.pos.y = self.pos.y + self.y_vel_h * TIME_STEP 
+        self.pos.z = self.pos.z + self.z_vel_h * TIME_STEP 
 
-        total_force_x2 = total_force_y2 = 0
+        total_force_x2 = total_force_y2 = total_force_z2 = 0
         for planet in planets:
             if planet == self:
                 continue
-            force_x2, force_y2 = self.gravity(planet)
+            force_x2, force_y2, force_z2 = self.gravity(planet)
             total_force_x2 += force_x2
             total_force_y2 += force_y2
+            total_force_z2 += force_z2
 
         self.x_vel = self.x_vel_h + 0.5*(total_force_x2 / self.mass) * TIME_STEP
         self.y_vel = self.y_vel_h + 0.5*(total_force_y2 / self.mass) * TIME_STEP
+        self.z_vel = self.z_vel_h + 0.5*(total_force_z2 / self.mass) * TIME_STEP
 
         if self.name == "Sun": # Do not render orbit for sun
             return
-
-        self.orbit.append([*self.pos])
+        
+        point_dist = self.orbital_period // 80
+        self.orbit_counter += 1
+        if self.orbit_counter >= point_dist:
+            self.orbit_counter = 0
+            self.orbit.append([*self.pos])
+            if len(self.orbit) > (self.orbital_period / point_dist) + 1:
+                del self.orbit[0]
 
 
     def gravity(self, other):
         distance_x = other.pos.x - self.pos.x
         distance_y = other.pos.y - self.pos.y
-        distance = math.sqrt(distance_x**2  + distance_y**2)
+        distance_z = other.pos.z - self.pos.z
+        distance = math.sqrt(distance_x**2  + distance_y**2 + distance_z**2)
         # F = GMm/d^2
         force = G * self.mass * other.mass / distance**2
-        force_angle = math.atan2(distance_y, distance_x)
-        force_x = force * math.cos(force_angle)
-        force_y = force * math.sin(force_angle)
-
-        return force_x, force_y
+        x_angle = math.acos(distance_x/ distance)
+        y_angle = math.acos(distance_y/ distance)
+        z_angle = math.acos(distance_z/ distance)
+        
+        force_x = force * math.cos(x_angle)
+        force_y = force * math.cos(y_angle)
+        force_z = force * math.cos(z_angle)
+        return force_x, force_y, force_z
 
 class exp_Planet:
     def __init__(self, name, color, orbital_period, t0, id, radius):
@@ -182,7 +198,7 @@ class exp_Planet:
         # Rendering orbit...
         if len(self.exp_orbit) > 1:
             scaled_points = []
-            for x, y in self.exp_orbit:
+            for x, y, z in self.exp_orbit:
                 scaled_points.append(convert_to_win_pos((x, y)))
             pygame.draw.lines(win, self.color, False, scaled_points, 1)
 
@@ -196,9 +212,9 @@ class exp_Planet:
 
     def exp_planet(self, i):
         xi = [np.double(self.lpos[i][xi]) for xi in ['x', 'y', 'z']]
-        self.pos = Vector2(xi[0]*1.496e11, xi[1]*1.496e11)
+        self.pos = Vector3(xi[0]*1.496e11, xi[1]*1.496e11, xi[2]*1.496e11)
         vxi = [np.double(self.lpos[i][xi]) for xi in ['vx', 'vy', 'vz']]
-        self.Vv = Vector2(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24)).magnitude()
+        self.Vv = Vector3(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24), vxi[2]*1.496e11/(3600*24)).magnitude()
         self.exp_orbit.append(self.pos)
         self.tt = Time(self.t, format='jd', out_subfmt='str').iso[:-13]
         self.t += 2
@@ -212,12 +228,12 @@ def get_pos(id):
     pos = Horizons(id=id, location="@sun", epochs=time, id_type=None).vectors()
     xi = [np.double(pos[xi]) for xi in ['x', 'y', 'z']]
     vxi = [np.double(pos[xi]) for xi in ['vx', 'vy', 'vz']]
-    Vx = Vector2(xi[0]*1.496e11, xi[1]*1.496e11)
-    Vvx = Vector2(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24))
+    Vx = Vector3(xi[0]*1.496e11, xi[1]*1.496e11, xi[2]*1.496e11)
+    Vvx = Vector3(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24), vxi[2]*1.496e11/(3600*24))
     return Vx, Vvx
 
 
-sun = Planet("Sun", Vector2(0, 0), YELLOW, 1.9891e30, 22, 0, (0,0))
+sun = Planet("Sun", Vector3(0, 0, 0), YELLOW, 1.9891e30, 22, 0, (0,0,0))
 mercury = Planet(
     "Mercury", get_pos('1')[0],
     DARK_GREY, 3.30e23, 7.5, 88, get_pos('1')[1]
@@ -283,7 +299,7 @@ def render_win_info():
     date_text = FONT.render(f"Date: {exp_uranus.tt}", 1, exp_uranus.color)
 
     with open(path+file_name+extension, "a") as output:
-        output.write(str((exp_uranus.pos-uranus.pos)[0])+','+str((exp_uranus.pos-uranus.pos)[1])+'\n')
+        output.write(str((exp_uranus.pos-uranus.pos)[0])+','+str((exp_uranus.pos-uranus.pos)[1])+','+str((exp_uranus.pos-uranus.pos)[2])+'\n')
 
     delta_text = FONT.render("Delta_x= {:.2e}, Delta_y= {:.2e}".format((exp_uranus.pos-uranus.pos)[0], (exp_uranus.pos-uranus.pos)[1]), 1, exp_uranus.color)
     win.blit(name_text, (15, 380))
@@ -297,7 +313,7 @@ planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus]
 #planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
 selected_planet = uranus
 path = 'projet\\'
-file_name = 'simul_sans_neptune'
+file_name = 'temp'
 extension = '.txt'
 with open(path+file_name+extension, "w") as output:
     output.write('')

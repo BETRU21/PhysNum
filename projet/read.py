@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 # Set the default color cycle
-mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=["r", "k", "b", 'orange']) 
+mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=["r", "k", "b", 'orange', 'green', 'violet', 'gold', 'gray']) 
 
 
 path = 'projet\\'
 files = os.listdir(path)
 
 i = 0
-ls = ['-', (0, (5,8))]
+ls = ['-', (0, (5,8)), ':', (0, (1,3))]
 fig = plt.figure()
 
 for f in files:
