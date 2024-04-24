@@ -28,7 +28,7 @@ LARGE_FONT = pygame.font.SysFont("Tahoma", 26)
 AU = 1.496e8 * 1000 # km to m
 G = 6.67428e-11
 SCALE = 15 / AU
-TIME_STEP = 3600 * 24 * 1 # 2 day
+TIME_STEP = 3600  # 1 min
 WIN_CENTER = Vector2(WIDTH // 2, HEIGHT // 2)
 
 BLACK = "#000000"
@@ -118,10 +118,15 @@ class Planet:
         sun_pos = convert_to_win_pos(sun.pos)
         pygame.draw.line(win, self.color, planet_pos, sun_pos, 1)
 
-    def update_position(self, planets, real_uranus_pos=False):
+    def update_position(self, planets, real_uranus_pos=False, real_uranus_vit = False):
         "Updates the position considering gravity of other planets"
         total_force_x = total_force_y = total_force_z = 0
-        self.pos = Vector3(real_uranus_pos)
+        if real_uranus_pos:
+            self.pos = Vector3(real_uranus_pos)
+        if real_uranus_vit:
+            self.x_vel = real_uranus_vit[0]
+            self.y_vel = real_uranus_vit[1]
+            self.z_vel = real_uranus_vit[2]
         all_planets = planets + exp_planets
         for planet in all_planets:
             if planet == self:
@@ -185,8 +190,8 @@ class exp_Planet:
     def __init__(self, name, color, orbital_period, t0, id, radius, mass):
         self.name = name
         self.lpos = Horizons(id=id, location="@sun", epochs={'start': t0,
-                        'stop': '2024-04-21',
-                        'step': '1d'}, id_type=None).vectors()
+                        'stop': '2024-04-22',
+                        'step': '1h'}, id_type=None).vectors()
         print(f'{name} positions loaded')
         self.color = color
         self.t = Time(sim_start_date).jd
@@ -221,17 +226,19 @@ class exp_Planet:
         xi2 = [np.double(self.lpos[i+1][xi]) for xi in ['x', 'y', 'z']]
         self.pos2 = Vector3(xi2[0]*1.496e11, xi2[1]*1.496e11, xi2[2]*1.496e11)
         vxi = [np.double(self.lpos[i][xi]) for xi in ['vx', 'vy', 'vz']]
-        self.Vv = Vector3(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24), vxi[2]*1.496e11/(3600*24)).magnitude()
+        self.vit = Vector3(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24), vxi[2]*1.496e11/(3600*24))
+        self.Vv = self.vit.magnitude()
         self.exp_orbit.append(self.pos)
         self.tt = Time(self.t, format='jd', out_subfmt='str').iso[:-13]
         self.t += 1
         self.render(win)
         if real_pos:
-            return self.pos
+            return self.pos, self.vit
+        
 
     
 
-sim_start_date = "1846-08-31"
+sim_start_date = "2024-04-1"
 time = Time(sim_start_date).jd
 def get_pos(id):
     pos = Horizons(id=id, location="@sun", epochs=time, id_type=None).vectors()
@@ -249,6 +256,7 @@ exp_earth = exp_Planet("exp_Earth", BLUE,  365.2, sim_start_date, '3', 9, 5.97e2
 exp_mars = exp_Planet("exp_Mars", RED, 687, sim_start_date, '4', 8.75, 6.42e23)
 exp_jupiter = exp_Planet("exp_Jupiter", BROWN, 4331, sim_start_date, '5', 18, 1.898e27)
 exp_saturn = exp_Planet("exp_Saturn", YELLOWISH_BROWN, 10747, sim_start_date, '6', 16, 5.68e26)
+exp_neptune = exp_Planet("exp_Neptune", BLUE, 59800,sim_start_date, '8', 12, 1.02e26)
 
 uranus = Planet(
     "Uranus", get_pos('7')[0],
@@ -302,6 +310,7 @@ def render_win_info():
 planets = [sun, uranus]
 #planets = [sun, uranus, neptune]
 exp_planets = [exp_mercury, exp_venus, exp_earth, exp_mars, exp_jupiter, exp_saturn]
+#exp_planets = [exp_mercury, exp_venus, exp_earth, exp_mars, exp_jupiter, exp_saturn, exp_neptune]
 
 selected_planet = uranus
 path = 'projet\\'
@@ -358,7 +367,8 @@ for _ in range(2000):
         if SCALE <= 0:
             SCALE += 5/AU
 
-    real_uranus_pos = exp_uranus.exp_planet(i, real_pos=True)
+    exp_neptune.exp_planet(i)
+    real_uranus_pos, real_uranus_vit = exp_uranus.exp_planet(i, real_pos=True)
     exp_saturn.exp_planet(i)
     exp_jupiter.exp_planet(i)
     exp_mars.exp_planet(i)
@@ -367,7 +377,7 @@ for _ in range(2000):
     exp_mercury.exp_planet(i)
     for planet in planets:
         if planet.name == 'Uranus':
-            planet.update_position(planets, real_uranus_pos)
+            planet.update_position(planets, real_uranus_pos, real_uranus_vit)
         else:
             planet.update_position(planets)
         planet.render(win)
