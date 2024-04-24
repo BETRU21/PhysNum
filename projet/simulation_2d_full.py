@@ -302,7 +302,7 @@ extension = '.txt'
 with open(path+file_name+extension, "w") as output:
     output.write('')
 i = 1
-for _ in range(4000):
+for _ in range(1000):
 #while run:
     clock.tick(100)
     win.fill(BLACK)

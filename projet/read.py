@@ -25,10 +25,12 @@ for f in files:
         plt.plot(time, data[:,0], label=f'$\\Delta_x$ {f[:-4]}' )
         plt.plot(time, data[:,1], label=f'$\\Delta_y$ {f[:-4]}')
         try:
-            plt.plot(time, data[:,2], label=f'$\\Delta_z$ {f[:-4]}')
+            plt.plot(time,np.sqrt(data[:,0]**2 + data[:,1]**2, data[:,2]**2), label=f'$\\Delta_r$ {f[:-4]}')
+            
         except IndexError as e:
+            plt.plot(time,np.sqrt(data[:,0]**2 + data[:,1]**2), label=f'$\\Delta_r$ {f[:-4]}')
             pass
-        plt.xlabel('Temps [h]')
+        plt.xlabel('Temps [jour]')
         plt.ylabel('Delta [km]')
         plt.legend()
         i += 1
