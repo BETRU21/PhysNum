@@ -28,7 +28,7 @@ LARGE_FONT = pygame.font.SysFont("Tahoma", 26)
 AU = 1.496e8 * 1000 # km to m
 G = 6.67428e-11
 SCALE = 15 / AU
-TIME_STEP = 3600  # 2 day
+TIME_STEP = 3600 * 24 * 1 # 2 day
 WIN_CENTER = Vector2(WIDTH // 2, HEIGHT // 2)
 
 BLACK = "#000000"
@@ -183,8 +183,8 @@ class exp_Planet:
     def __init__(self, name, color, orbital_period, t0, id, radius):
         self.name = name
         self.lpos = Horizons(id=id, location="@sun", epochs={'start': t0,
-                        'stop': '1850-04-21',
-                        'step': '1h'}, id_type=None).vectors()
+                        'stop': '2024-04-21',
+                        'step': '1d'}, id_type=None).vectors()
         self.color = color
         self.t = Time(sim_start_date).jd
         self.radius = radius
@@ -217,7 +217,7 @@ class exp_Planet:
         self.Vv = Vector3(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24), vxi[2]*1.496e11/(3600*24)).magnitude()
         self.exp_orbit.append(self.pos)
         self.tt = Time(self.t, format='jd', out_subfmt='str').iso[:-13]
-        self.t += 2
+        self.t += 1
         self.render(win)
 
     
@@ -313,7 +313,7 @@ planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus]
 #planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
 selected_planet = uranus
 path = 'projet\\'
-file_name = '1h_step_sans_neptune'
+file_name = 'temp'
 extension = '.txt'
 with open(path+file_name+extension, "w") as output:
     output.write('')
@@ -371,8 +371,6 @@ for _ in range(4000):
         planet.update_position(planets)
         planet.render(win)
 
-        
-    
     i += 1
     selected_planet.render_info(win, sun)
     render_win_info()
