@@ -28,7 +28,7 @@ LARGE_FONT = pygame.font.SysFont("Tahoma", 26)
 AU = 1.496e8 * 1000 # km to m
 G = 6.67428e-11
 SCALE = 15 / AU
-TIME_STEP = 3600  # 1 min
+TIME_STEP = 3600  # 1 h
 WIN_CENTER = Vector2(WIDTH // 2, HEIGHT // 2)
 
 BLACK = "#000000"
@@ -186,6 +186,9 @@ class Planet:
         force_z = force * math.cos(z_angle)
         return force_x, force_y, force_z
 
+
+sim_start_date = "2024-03-10"
+time = Time(sim_start_date).jd
 class exp_Planet:
     def __init__(self, name, color, orbital_period, t0, id, radius, mass):
         self.name = name
@@ -238,8 +241,7 @@ class exp_Planet:
 
     
 
-sim_start_date = "2024-04-1"
-time = Time(sim_start_date).jd
+
 def get_pos(id):
     pos = Horizons(id=id, location="@sun", epochs=time, id_type=None).vectors()
     xi = [np.double(pos[xi]) for xi in ['x', 'y', 'z']]
@@ -314,12 +316,12 @@ exp_planets = [exp_mercury, exp_venus, exp_earth, exp_mars, exp_jupiter, exp_sat
 
 selected_planet = uranus
 path = 'projet\\'
-file_name = 'test'
+file_name = 'test_sans'
 extension = '.txt'
 with open(path+file_name+extension, "w") as output:
     output.write('')
 i = 1
-for _ in range(2000):
+for _ in range(1000):
 #while run:
     clock.tick(100)
     win.fill(BLACK)

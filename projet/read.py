@@ -22,13 +22,13 @@ for f in files:
         data = np.loadtxt(path+f, delimiter=',')
         time = np.linspace(1, len(data[:,0])*1, len(data[:,0]))
 
-        plt.plot(time, data[:,0], label=f'$\\Delta_x$ {f[:-5]}' )
-        plt.plot(time, data[:,1], label=f'$\\Delta_y$ {f[:-5]}')
+        plt.plot(time, data[:,0], label=f'$\\Delta_x$ {f[:-4]}' )
+        plt.plot(time, data[:,1], label=f'$\\Delta_y$ {f[:-4]}')
         try:
-            plt.plot(time, data[:,2], label=f'$\\Delta_z$ {f[:-5]}')
+            plt.plot(time, data[:,2], label=f'$\\Delta_z$ {f[:-4]}')
         except IndexError as e:
             pass
-        plt.xlabel('Temps [jour]')
+        plt.xlabel('Temps [h]')
         plt.ylabel('Delta [km]')
         plt.legend()
         i += 1
