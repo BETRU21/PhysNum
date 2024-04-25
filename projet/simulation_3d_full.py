@@ -28,7 +28,7 @@ LARGE_FONT = pygame.font.SysFont("Tahoma", 26)
 AU = 1.496e8 * 1000 # km to m
 G = 6.67428e-11
 SCALE = 15 / AU
-TIME_STEP = 3600 * 24 * 1 # 2 day
+TIME_STEP = 3600 * 24 * 1 # 1 day
 WIN_CENTER = Vector2(WIDTH // 2, HEIGHT // 2)
 
 BLACK = "#000000"

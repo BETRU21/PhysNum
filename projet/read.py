@@ -2,13 +2,18 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 from cycler import cycler
+import seaborn as sns
+sns.set_theme(style="ticks", palette="deep")
+
+plt.rcParams["axes.spines.right"] = False
+plt.rcParams["axes.spines.top"] = False
 
 nb_of_files = 2
 # Set the default color cycle
-cmap = plt.get_cmap('jet')
-colors = cmap(np.linspace(0, 1, 3*nb_of_files))
+cmap = plt.get_cmap('gist_rainbow')
+colors = cmap(np.linspace(0, 1, 4))
 plt.rc('axes', prop_cycle=(cycler('color', colors) +
-                           cycler('linestyle', ['-', '--', ':', '-.',(0, (5, 10)), (0, (1, 10))]*int(nb_of_files/2))))
+                           cycler('linestyle', ['-', '--', '-.', ':'])))
 
 path = 'projet\\'
 files = os.listdir(path)
@@ -24,13 +29,13 @@ for f in files:
 
         plt.plot(time, data[:,0], label=f'$\\Delta_x$ {f[:-4]}' )
         plt.plot(time, data[:,1], label=f'$\\Delta_y$ {f[:-4]}')
-        try:
-            plt.plot(time,np.sqrt(data[:,0]**2 + data[:,1]**2, data[:,2]**2), label=f'$\\Delta_r$ {f[:-4]}')
+        #try:
+        #plt.plot(time,np.sqrt(data[:,0]**2 + data[:,1]**2, data[:,2]**2), label=f'$\\Delta_r$ {f[:-4]}')
             
-        except IndexError as e:
-            plt.plot(time,np.sqrt(data[:,0]**2 + data[:,1]**2), label=f'$\\Delta_r$ {f[:-4]}')
-            pass
-        plt.xlabel('Temps [jour]')
+        #except IndexError as e:
+            #plt.plot(time,np.sqrt(data[:,0]**2 + data[:,1]**2), label=f'$\\Delta_r$')
+            #pass
+        plt.xlabel('Temps [h]')
         plt.ylabel('Delta [km]')
         plt.legend()
         i += 1
