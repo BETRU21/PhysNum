@@ -18,7 +18,7 @@ pygame.display.init()
 pygame.font.init()
 
 win = pygame.display.set_mode((750, 500), RESIZABLE)
-pygame.display.set_caption("Solar System 2.0")
+pygame.display.set_caption("Système solaire")
 clock = pygame.time.Clock()
 
 WIDTH, HEIGHT = pygame.display.get_surface().get_size()
@@ -95,11 +95,11 @@ class Planet:
         "Renders information about the planet."
         # Information text labels...
         distance_from_sun = self.pos.distance_to(sun.pos)
-        name_text = FONT.render(f"Name: {self.name}", 1, self.color)
-        mass_text = FONT.render(f"Mass: {self.mass}", 1, self.color)
-        orbital_period_text = FONT.render(f"Orbital period: {self.orbital_period} days", 1, self.color)
-        distance_text = FONT.render(f"Distance from sun: {round(distance_from_sun):,}km", 1, self.color)
-        vel_text = FONT.render(f"Velocity: {round(np.sqrt(self.x_vel**2+self.y_vel**2) / 1000, 2):,} km/s", 1, self.color)
+        name_text = FONT.render(f"Nom: {self.name}", 1, self.color)
+        mass_text = FONT.render(f"Masse: {self.mass}", 1, self.color)
+        orbital_period_text = FONT.render(f"Période sidérale: {self.orbital_period} jours", 1, self.color)
+        distance_text = FONT.render(f"Distance du soleil: {round(distance_from_sun):,}km", 1, self.color)
+        vel_text = FONT.render(f"Vitesse: {round(np.sqrt(self.x_vel**2+self.y_vel**2) / 1000, 2):,} km/s", 1, self.color)
 
         # Rendering the labels...
         alignment = max(
@@ -187,7 +187,7 @@ class Planet:
         return force_x, force_y, force_z
 
 
-sim_start_date = "2024-03-10"
+sim_start_date = "2024-01-01"
 time = Time(sim_start_date).jd
 class exp_Planet:
     def __init__(self, name, color, orbital_period, t0, id, radius, mass):
@@ -232,8 +232,8 @@ class exp_Planet:
         self.vit = Vector3(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24), vxi[2]*1.496e11/(3600*24))
         self.Vv = self.vit.magnitude()
         self.exp_orbit.append(self.pos)
-        self.tt = Time(self.t, format='jd', out_subfmt='str').iso[:-13]
-        self.t += 1
+        self.tt = Time(self.t, format='jd', out_subfmt='str').iso[:-10]+':00'
+        self.t += 0.0416667
         self.render(win)
         if real_pos:
             return self.pos, self.vit
@@ -282,8 +282,8 @@ def render_win_info():
     x, y = convert_to_real_pos(pygame.mouse.get_pos())
     x_text = FONT.render(f"Position - x: {round(x):,}km", 1, WHITE)
     y_text = FONT.render(f"Position - y: {round(y):,}km", 1, WHITE)
-    scale_text = FONT.render(f"Scale: 1-(x, y): {round(1 / SCALE):,}km", 1, WHITE)
-    timestep_text = FONT.render(f"Timestep: {TIME_STEP / (3600 * 24)} days", 1, WHITE)
+    scale_text = FONT.render(f"Échelle: 1-(x, y): {round(1 / SCALE):,}km", 1, WHITE)
+    timestep_text = FONT.render(f"Pas: {TIME_STEP / (3600)} h", 1, WHITE)
     fps_text = FONT.render(f"FPS: {int(clock.get_fps())}", 1, WHITE)
     win.blit(fps_text, (15, 15))
     win.blit(x_text, (15, 35))
@@ -293,9 +293,9 @@ def render_win_info():
 
 
     distance_from_sun = exp_uranus.pos.distance_to(sun.pos)
-    name_text = FONT.render(f"Name: {exp_uranus.name}", 1, exp_uranus.color)
-    distance_text = FONT.render(f"Distance from sun: {round(distance_from_sun):,}km", 1, exp_uranus.color)
-    vel_text = FONT.render(f"Velocity: {round(exp_uranus.Vv/ 1000, 2):,} km/s", 1, exp_uranus.color)
+    name_text = FONT.render(f"Nom: {exp_uranus.name}", 1, exp_uranus.color)
+    distance_text = FONT.render(f"Distance du soleil: {round(distance_from_sun):,}km", 1, exp_uranus.color)
+    vel_text = FONT.render(f"Vitesse: {round(exp_uranus.Vv/ 1000, 2):,} km/s", 1, exp_uranus.color)
     date_text = FONT.render(f"Date: {exp_uranus.tt}", 1, exp_uranus.color)
 
     with open(path+file_name+extension, "a") as output:
@@ -321,7 +321,7 @@ extension = '.txt'
 with open(path+file_name+extension, "w") as output:
     output.write('')
 i = 1
-for _ in range(1000):
+for _ in range(5000):
 #while run:
     clock.tick(100)
     win.fill(BLACK)
