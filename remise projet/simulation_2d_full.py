@@ -1,0 +1,374 @@
+# https://codereview.stackexchange.com/questions/281398/solar-system-simulation-with-real-values-in-pygame
+
+import sys
+import contextlib
+with contextlib.redirect_stdout(None):
+    import pygame
+from pygame.locals import *
+from pygame.math import Vector2
+import math
+from astroquery.jplhorizons import Horizons
+from astropy.time import Time
+import numpy as np
+import warnings
+
+warnings.simplefilter('ignore', UserWarning)
+
+pygame.display.init()
+pygame.font.init()
+
+win = pygame.display.set_mode((750, 500), RESIZABLE)
+pygame.display.set_caption("Système solaire")
+clock = pygame.time.Clock()
+
+WIDTH, HEIGHT = pygame.display.get_surface().get_size()
+FONT = pygame.font.SysFont("Tahoma", 16)
+LARGE_FONT = pygame.font.SysFont("Tahoma", 26)
+
+AU = 1.496e8 * 1000 # km to m
+G = 6.67428e-11
+SCALE = 15 / AU
+TIME_STEP = 3600 * 24 * 2 # 2 day
+WIN_CENTER = Vector2(WIDTH // 2, HEIGHT // 2)
+
+BLACK = "#000000"
+WHITE = "#FFFFFF"
+cSun = "#FFFF00"
+cMercury = "#5A5A5A"
+cVenus = "#e83815"
+cEarth = "#0000FF"
+cMars = "#e86215"
+cJupiter = "#f5a171"
+cSaturn = "#a1714a"
+cUranus = "#6f77e3"
+cNeptune = '#0210cf'
+GREEN = '#1ee635'
+
+def convert_to_win_pos(pos):
+    "Convertie une position réel à une position d'affichage"
+    return WIN_CENTER + (pos[0] * SCALE, -pos[1] * SCALE)
+
+def convert_to_real_pos(pos):
+    "Convertie une position d'affichage à une position réel"
+    real_pos = Vector2(pos) - WIN_CENTER
+    real_pos.x /= SCALE
+    real_pos.y /= -SCALE
+    return real_pos
+
+class Planet:
+    def __init__(self, name, pos, color, mass, radius, orbital_period, vel):
+        self.name = name
+        self.pos = pos
+        self.color = color
+        self.mass = mass
+        self.radius = radius
+        self.x_vel = vel[0]
+        self.y_vel = vel[1]
+        self.x_vel_h = 0
+        self.y_vel_h = 0
+        self.orbital_period = orbital_period
+        self.orbit_counter = 0
+        self.orbit = []
+
+    def render(self, win):
+        "Affiche la planète et son orbite dans la fenêtre"
+        # Partie orbite
+        if len(self.orbit) > 1:
+            scaled_points = []
+            for x, y in self.orbit:
+                scaled_points.append(convert_to_win_pos((x, y)))
+            pygame.draw.lines(win, self.color, False, scaled_points, 2)
+
+        # Partie planète
+        pygame.draw.circle(
+            win,
+            self.color,
+            convert_to_win_pos(self.pos),
+            self.radius*SCALE*AU/100
+        )
+
+    def render_info(self, win, sun):
+        "Affiche l'information de la planète sélectionnée"
+        distance_from_sun = self.pos.distance_to(sun.pos)
+        name_text = FONT.render(f"Nom: {self.name}", 1, self.color)
+        mass_text = FONT.render(f"Masse: {self.mass}", 1, self.color)
+        orbital_period_text = FONT.render(
+            f"Période sidérale: {self.orbital_period} jours", 1, self.color)
+        distance_text = FONT.render(f"Distance du soleil: {round(distance_from_sun/(1.496e8 * 1000), 3):,}UA", 1, self.color)
+        vel_text = FONT.render(f"Vitesse: {round(
+            np.sqrt(self.x_vel**2+self.y_vel**2) / (1000), 3):,} km/s", 1, self.color)
+
+        alignment = max(
+            name_text.get_width(), mass_text.get_width(),
+            orbital_period_text.get_width(),
+            distance_text.get_width(), vel_text.get_width()
+        ) + 15
+        win.blit(name_text, (WIDTH - alignment, 15))
+        win.blit(mass_text, (WIDTH - alignment, 35))
+        win.blit(orbital_period_text, (WIDTH - alignment, 55))
+        win.blit(distance_text, (WIDTH - alignment, 75))
+        win.blit(vel_text, (WIDTH - alignment, 95))
+
+        planet_pos = convert_to_win_pos(self.pos)
+        sun_pos = convert_to_win_pos(sun.pos)
+        pygame.draw.line(win, self.color, planet_pos, sun_pos, 1)
+
+    def update_position(self, planets):
+        "Calcul d'un pas de la simualtion avec la méthode Verlet"
+        total_force_x = total_force_y = 0
+        for planet in planets:
+            if planet == self:
+                continue
+            force_x, force_y = self.gravity(planet)
+            total_force_x += force_x
+            total_force_y += force_y
+        
+        self.x_vel_h = self.x_vel+0.5*(total_force_x / self.mass) * TIME_STEP
+        self.y_vel_h = self.y_vel+0.5*(total_force_y / self.mass) * TIME_STEP
+
+        # F = ma, a = F / m
+        self.pos.x = self.pos.x + self.x_vel_h * TIME_STEP 
+        self.pos.y = self.pos.y + self.y_vel_h * TIME_STEP 
+
+        total_force_x2 = total_force_y2 = 0
+        for planet in planets:
+            if planet == self:
+                continue
+            force_x2, force_y2 = self.gravity(planet)
+            total_force_x2 += force_x2
+            total_force_y2 += force_y2
+
+        self.x_vel = self.x_vel_h + 0.5*(total_force_x2 / self.mass) * TIME_STEP
+        self.y_vel = self.y_vel_h + 0.5*(total_force_y2 / self.mass) * TIME_STEP
+
+        if self.name == "Sun": # Do not render orbit for sun
+            return
+
+        point_dist = self.orbital_period // 80
+        self.orbit_counter += 1
+        if self.orbit_counter >= point_dist:
+            self.orbit_counter = 0
+            self.orbit.append([*self.pos])
+            if len(self.orbit) > (self.orbital_period / point_dist) + 1:
+                del self.orbit[0]
+
+
+    def gravity(self, other): # Calcul de la force (F = ma)
+        distance_x = other.pos.x - self.pos.x
+        distance_y = other.pos.y - self.pos.y
+        distance = math.sqrt(distance_x**2  + distance_y**2)
+        # F = GMm/d^2
+        force = G * self.mass * other.mass / distance**2
+        force_angle = math.atan2(distance_y, distance_x)
+        force_x = force * math.cos(force_angle)
+        force_y = force * math.sin(force_angle)
+
+        return force_x, force_y
+
+class exp_Planet:
+    def __init__(self, name, color, orbital_period, t0, id, radius):
+        self.name = name
+        self.lpos = Horizons(id=id, location="@sun", epochs={'start': t0,
+                        'stop': '2024-04-28',
+                        'step': f'{step}'}, id_type=None).vectors()
+        self.color = color
+        self.t = Time(sim_start_date).jd
+        self.radius = radius
+        self.orbital_period = orbital_period
+        self.orbit_counter = 0
+        self.exp_orbit = []
+        
+
+    def render(self, win):
+        "Copie de la même fonction pour les planètes simulées"
+        if len(self.exp_orbit) > 1:
+            scaled_points = []
+            for x, y in self.exp_orbit:
+                scaled_points.append(convert_to_win_pos((x, y)))
+            pygame.draw.lines(win, self.color, False, scaled_points, 1)
+
+        # Rendering planet...
+        pygame.draw.circle(
+            win,
+            self.color,
+            convert_to_win_pos(self.pos),
+            self.radius*SCALE*AU/100
+        )
+
+    def exp_planet(self, i):
+        "Obtiens les valeurs réelles de la postion et vitesse des planètes"
+        xi = [np.double(self.lpos[i][xi]) for xi in ['x', 'y', 'z']]
+        self.pos = Vector2(xi[0]*1.496e11, xi[1]*1.496e11)
+        vxi = [np.double(self.lpos[i][xi]) for xi in ['vx', 'vy', 'vz']]
+        self.Vv = Vector2(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24)).magnitude()
+        self.exp_orbit.append(self.pos)
+        self.tt = Time(self.t, format='jd', out_subfmt='str').iso[:-13]
+        self.t += 2
+        self.render(win)
+
+    
+
+sim_start_date = "1995-10-01"  # La date de fin de positon expérimentale est la date de la remise
+step = '2d'
+time = Time(sim_start_date).jd
+
+def get_pos(id):
+    pos = Horizons(id=id, location="@sun", epochs=time, id_type=None).vectors()
+    xi = [np.double(pos[xi]) for xi in ['x', 'y', 'z']]
+    vxi = [np.double(pos[xi]) for xi in ['vx', 'vy', 'vz']]
+    Vx = Vector2(xi[0]*1.496e11, xi[1]*1.496e11)
+    Vvx = Vector2(vxi[0]*1.496e11/(3600*24), vxi[1]*1.496e11/(3600*24))
+    return Vx, Vvx
+
+
+sun = Planet("Sun", Vector2(0, 0), cSun, 1.9891e30, 22, 0, (0,0))
+mercury = Planet(
+    "Mercury", get_pos('1')[0],
+    cMercury, 3.30e23, 7.5, 88, get_pos('1')[1]
+)
+venus = Planet(
+    "Venus", get_pos('2')[0],
+    cVenus, 4.87e24, 8.5, 224.7, get_pos('2')[1]
+)
+earth = Planet(
+    "Earth", get_pos('3')[0],
+    cEarth, 5.97e24, 9, 365.2, get_pos('3')[1]
+)
+mars = Planet(
+    "Mars", get_pos('4')[0],
+    cMars, 6.42e23, 8.75, 687, get_pos('4')[1]
+)
+jupiter = Planet(
+    "Jupiter", get_pos('5')[0],
+    cJupiter, 1.898e27, 18, 4331, get_pos('5')[1]
+)
+saturn = Planet(
+    "Saturn", get_pos('6')[0],
+    cSaturn, 5.68e26, 16, 10747, get_pos('6')[1]
+)
+uranus = Planet(
+    "Uranus", get_pos('7')[0],
+    cUranus, 8.68e25, 14, 30589, get_pos('7')[1]
+)
+neptune = Planet(
+    "Neptune", get_pos('8')[0],
+    cNeptune, 1.02e26, 12, 59800, get_pos('8')[1]
+)
+
+exp_uranus = exp_Planet("exp_Uranus",
+    GREEN, 30589, sim_start_date, '7', 16
+)
+
+
+run = True
+drag = False
+drag_start = None
+liste_delta = {}
+
+def render_win_info():
+    "Affiche les inforamtions générales de la fenêtre"
+    x, y = convert_to_real_pos(pygame.mouse.get_pos())
+    x_text = FONT.render(f"Position - x: {round(x/(1.496e8 * 1000),3):,}UA", 1, WHITE)
+    y_text = FONT.render(f"Position - y: {round(y/(1.496e8 * 1000),3):,}UA", 1, WHITE)
+    timestep_text = FONT.render(f"Pas: {TIME_STEP / (3600)} h", 1, WHITE)
+    fps_text = FONT.render(f"FPS: {int(clock.get_fps())}", 1, WHITE)
+    planet_scale1 = FONT.render("Les orbites sont à l'échelle.", 1, WHITE)
+    planet_scale2 = FONT.render("Le rayon des planètes ne l'est pas.", 1, WHITE)
+    win.blit(fps_text, (15, 15))
+    win.blit(x_text, (15, 35))
+    win.blit(y_text, (15, 55))
+    win.blit(timestep_text, (15, 75))
+    win.blit(planet_scale1, (15, 95))
+    win.blit(planet_scale2, (15, 115))
+
+
+    distance_from_sun = exp_uranus.pos.distance_to(sun.pos)
+    name_text = FONT.render(f"Nom: {exp_uranus.name}", 1, exp_uranus.color)
+    distance_text = FONT.render(f"Distance du soleil: {round(
+        distance_from_sun/(1.496e8 * 1000), 3):,}UA", 1, exp_uranus.color)
+    vel_text = FONT.render(
+        f"Vitesse: {round(exp_uranus.Vv / 1000, 2):,} km/s", 1, exp_uranus.color)
+    date_text = FONT.render(f"Date: {exp_uranus.tt}", 1, exp_uranus.color)
+
+    # Enregistre les données voulues dans un fichier texte
+    with open(path+file_name+extension, "a") as output:
+        output.write(str((exp_uranus.pos-uranus.pos)[0])+','+str(
+            (exp_uranus.pos-uranus.pos)[1])+','+'\n')
+
+    delta_text = FONT.render("Delta_x= {:.2e} km, Delta_y= {:.2e} km".format(
+        (exp_uranus.pos-uranus.pos)[0], (exp_uranus.pos-uranus.pos)[1]), 1, exp_uranus.color)
+    win.blit(name_text, (15, 380))
+    win.blit(distance_text, (15, 400))
+    win.blit(vel_text, (15, 420))
+    win.blit(date_text, (15, 440))
+    win.blit(delta_text, (15, 460))
+
+
+planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus]
+#planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
+selected_planet = uranus
+path = 'projet\\'
+file_name = 'temp'
+extension = '.txt'
+with open(path+file_name+extension, "w") as output:
+    output.write('')
+i = 1
+for _ in range(5000):
+#while run:
+    clock.tick(100)
+    win.fill(BLACK)
+
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
+        elif event.type == KEYDOWN:
+            if event.key == K_ESCAPE:
+                pygame.quit()
+                sys.exit()
+        elif event.type == MOUSEBUTTONDOWN:
+            if event.button == 1:
+                drag = True
+                drag_start = pygame.mouse.get_pos()
+                for planet in planets:
+                    planet_pos = convert_to_win_pos(planet.pos)
+                    if planet_pos.distance_to(pygame.mouse.get_pos()) < planet.radius * 2:
+                        selected_planet = planet
+                        break
+        elif event.type == MOUSEBUTTONUP:
+            if event.button == 1:
+                drag = False
+                drag_start = None
+        elif event.type == MOUSEMOTION:
+            if drag:
+                WIN_CENTER += Vector2(pygame.mouse.get_pos()) - drag_start
+                drag_start = pygame.mouse.get_pos()
+        elif event.type == VIDEORESIZE:
+            WIDTH, HEIGHT = pygame.display.get_surface().get_size()
+        elif event.type == MOUSEWHEEL:
+            if event.y == 1:
+                SCALE += 5/AU # Zoom in
+            if event.y == -1:
+                SCALE -= 5/AU # Zoom out
+                if SCALE <= 0:
+                    SCALE += 5/AU
+
+    keys_pressed = pygame.key.get_pressed()
+    if keys_pressed[K_UP]:
+        SCALE += 1/AU # Zoom in
+    if keys_pressed[K_DOWN]:
+        SCALE -= 1/AU # Zoom out
+        if SCALE <= 0:
+            SCALE += 5/AU
+
+    exp_uranus.exp_planet(i)
+    for planet in planets:
+        planet.update_position(planets)
+        planet.render(win)
+
+        
+    
+    i += 1
+    selected_planet.render_info(win, sun)
+    render_win_info()
+    pygame.display.update()
